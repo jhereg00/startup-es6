@@ -1,0 +1,21 @@
+{
+  "name": "startup-gl",
+  "version": "0.1.0",
+  "description": "Startup files for webgl projects. ES6 and (hopefully) lighter alternative to THREE.js.",
+  "main": "null",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Glenn Martin",
+  "license": "ISC",
+  "devDependencies": {
+    "babel-preset-env": "^1.1.5",
+    "gulp": "^3.9.1",
+    "gulp-babel": "^6.1.2",
+    "gulp-rename": "^1.2.2",
+    "gulp-sourcemaps": "^1.9.1",
+    "gulp-strip-debug": "^1.1.0",
+    "gulp-uglify": "^2.0.0",
+    "gulp-webserver": "^0.9.1"
+  }
+}
