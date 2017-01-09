@@ -27,24 +27,32 @@ function setMeta (value) {
   else if (jclass === object) return 2;
 };
 
-function extendObject (target, source, shallow = false) {
-  for (var key in source) {
-    // iterate through props in source object
-    if (source.hasOwnProperty(key)) {
-      targetMeta = setMeta(target[key]);
-      sourceMeta = setMeta(source[key]);
-      if (source[key] !== target[key]) {
-        // not the same, better update target
-        if (!shallow && sourceMeta && targetMeta && targetMeta === sourceMeta) {
-          // deep extend if of same type
-          target[key] = extendObject(target[key], source[key], true);
-        } else if (sourceMeta !== 0) {
-          // shallow, or just set to source's prop
-          target[key] = source[key];
+function extendObject () {
+  // parse from arguments
+  var target = arguments[0];
+  var shallow = arguments[arguments.length - 1] === true;
+  for (var i = 1; i < arguments.length; i++) {
+    var source = arguments[i];
+    if (!source || (typeof source !== 'object' && typeof source !== 'function'))
+      continue;
+    for (var key in source) {
+      // iterate through props in source object
+      if (source.hasOwnProperty(key)) {
+        targetMeta = setMeta(target[key]);
+        sourceMeta = setMeta(source[key]);
+        if (source[key] !== target[key]) {
+          // not the same, better update target
+          if (!shallow && sourceMeta && targetMeta && targetMeta === sourceMeta) {
+            // deep extend if of same type
+            target[key] = extendObject(target[key], source[key], true);
+          } else if (sourceMeta !== 0) {
+            // shallow, or just set to source's prop
+            target[key] = source[key];
+          }
         }
       }
+      else break; // hasOwnProperty === false, meaning we're through the non-prototype stuff
     }
-    else break; // hasOwnProperty === false, meaning we're through the non-prototype stuff
   }
   return target;
 }

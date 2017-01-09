@@ -52,12 +52,19 @@ class Color {
     extendObject(this, values, true);
   }
 
+  toFloatArray () {
+    return [
+      this.r / 255,
+      this.g / 255,
+      this.b / 255,
+      this.a
+    ];
+  }
+
   static parseHex (hex) {
     if (typeof hex === 'string') {
       hex = hex.replace(/(^|[x#])([a-f0-9])([a-f0-9])([a-f0-9])$/, ($0, $1, $2, $3, $4) => '' + $2 + $2 + $3 + $3 + $4 + $4);
-      console.log(hex);
       hex = parseInt(hex.replace(/^0x|#/,''), 16);
-      console.log(hex);
     }
     return {
       r: hex >>> 16,
