@@ -26,7 +26,7 @@ let fileRequests = {};
 class GLShader {
   constructor (gl, filePath, shaderType = 'VERTEX_SHADER') {
     this.ready = false;
-    this.readyFns = [];
+    this._readyFns = [];
     if (!gl || !(gl instanceof WebGLRenderingContext)) {
       throw new Error('GLShader requires a WebGLRenderingContext as its first argument');
     }
@@ -59,16 +59,16 @@ class GLShader {
       throw new Error("An error occurred compiling the shaders (" + this.filePath + "): \n" + this.gl.getShaderInfoLog(this.shader));
     }
     this.ready = true;
-    this.readyFns.forEach((x) => x.apply(this));
+    this._readyFns.forEach((x) => x());
   }
 
   attachTo (program) {
     if (!program instanceof WebGLProgram)
       throw new Error("GLShader.attachTo must be passed a valid WebGLProgram");
     if (!this.ready) {
-      this.addReadyListener(function () {
+      this.addReadyListener((function () {
         this.attachTo(program);
-      });
+      }).bind(this));
     }
     else {
       return this.gl.attachShader(program, this.shader);
@@ -76,7 +76,10 @@ class GLShader {
   }
 
   addReadyListener (fn) {
-    this.readyFns.push(fn);
+    if (!this.ready)
+      this._readyFns.push(fn);
+    else
+      fn();
   }
 
   static purge () {

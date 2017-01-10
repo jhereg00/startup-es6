@@ -13,14 +13,14 @@
  *
  * @returns {object} extendedTarget
  */
-var array = '[object Array]',
+let array = '[object Array]',
     object = '[object Object]',
     targetMeta,
     sourceMeta;
 
 function setMeta (value) {
   // checks what type of value we have, array, object, or other
-  var jclass = {}.toString.call(value);
+  let jclass = {}.toString.call(value);
   if (value === undefined) return 0;
   else if (typeof value !== 'object') return false;
   else if (jclass === array) return 1;
@@ -29,13 +29,13 @@ function setMeta (value) {
 
 function extendObject () {
   // parse from arguments
-  var target = arguments[0];
-  var shallow = arguments[arguments.length - 1] === true;
-  for (var i = 1; i < arguments.length; i++) {
-    var source = arguments[i];
+  let target = arguments[0];
+  let shallow = arguments[arguments.length - 1] === true;
+  for (let i = 1; i < arguments.length; i++) {
+    let source = arguments[i];
     if (!source || (typeof source !== 'object' && typeof source !== 'function'))
       continue;
-    for (var key in source) {
+    for (let key in source) {
       // iterate through props in source object
       if (source.hasOwnProperty(key)) {
         targetMeta = setMeta(target[key]);

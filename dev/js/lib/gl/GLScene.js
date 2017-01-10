@@ -13,13 +13,16 @@
  * @protected {boolean} _needsUpdate
  *
  * @property {Color} backgroundColor
+ *
+ * @method addTo - append canvas to the passed element
+ *   @param {DOMElement} parent
+ * @method addReadyListener
+ *   @param {function} fn
  */
 ///////////////
 // requirements
 ///////////////
-var Color = require('lib/Color');
-// var GLVertexShader = require('lib/gl/GLVertexShader');
-// var GLFragmentShader = require('lib/gl/GLFragmentShader');
+const Color = require('lib/Color');
 
 ///////////////
 // constants / default settings
@@ -32,9 +35,11 @@ class GLScene {
 
   // constructor
   constructor (width, height) {
+    this.ready = false;
+    this._readyFns = [];
     // make a canvas and initialize gl context
     this.canvas = document.createElement('canvas');
-    var gl = this.gl = this.canvas.getContext('webgl') || this.canvas.getContext('experimental-webgl');
+    let gl = this.gl = this.canvas.getContext('webgl') || this.canvas.getContext('experimental-webgl');
     // ensure gl context was successful
     if (!gl) {
       throw new Error('failed to get WebGL context.');
@@ -52,6 +57,19 @@ class GLScene {
     this.gl.depthFunc(this.gl.LEQUAL);
 
     this.initializeShaders();
+    this.initializePrograms();
+
+    let programCount = Object.keys(this.programs).length;
+    let programReadyCount = 0;
+    for (let prop in this.programs) {
+      this.programs[prop].addReadyListener((function () {
+        programReadyCount++;
+        if (programReadyCount === programCount) {
+          this.ready = true;
+          this._readyFns.forEach(fn => fn());
+        }
+      }).bind(this));
+    }
   }
 
   // properties
@@ -79,12 +97,29 @@ class GLScene {
     this.gl.clearColor.apply(this.gl, this._backgroundColor.toFloatArray());
   }
 
-  // initialization functions
+  // interface functions
   initializeShaders () {
     console.error(this.constructor.name + ' does not override initializeShaders');
   }
   initializePrograms () {
     console.error(this.constructor.name + ' does not override initializePrograms');
+  }
+  initializeBuffers () {
+    console.error(this.constructor.name + ' does not override initializeBuffers');
+  }
+  draw () {
+    console.error(this.constructor.name + ' does not override draw');
+  }
+
+  // methods
+  addTo (parent) {
+    parent.appendChild(this.canvas);
+  }
+  addReadyListener (fn) {
+    if (!this.ready)
+      this._readyFns.push(fn);
+    else
+      fn();
   }
 }
 

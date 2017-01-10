@@ -52,10 +52,10 @@ class AjaxRequest {
     }
 
     // make actual request
-  	var xhttp = this.xhttp = new XMLHttpRequest();
+  	let xhttp = this.xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = (function () {
       if (this.stateFns[xhttp.readyState] && this.stateFns[xhttp.readyState].length) {
-        for (var i = 0, len = this.stateFns[xhttp.readyState].length; i < len; i++) {
+        for (let i = 0, len = this.stateFns[xhttp.readyState].length; i < len; i++) {
           this.stateFns[xhttp.readyState][i](xhttp.responseText, xhttp);
         }
       }

@@ -3,7 +3,7 @@ const GLShader = require('lib/gl/GLShader');
 const AjaxRequest = require('lib/AjaxRequest');
 
 describe("GLShader", function () {
-  var canvas, gl;
+  let canvas, gl;
   before(function () {
     canvas = document.createElement('canvas');
     gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
