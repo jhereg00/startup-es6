@@ -31,6 +31,10 @@ postMocha = function () {
   let Scene3d = require('lib/gl/Scene3d');
   let scene = new Scene3d (480,320);
   scene.addTo(document.body);
-  scene.addObject();
-  scene.draw();
+  var obj = scene.createObject();
+  (function loop () {
+    obj.rotateBy(0,0,Math.PI / 180);
+    scene.draw();
+    requestAnimationFrame(loop);
+  })();
 }

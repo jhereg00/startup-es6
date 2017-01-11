@@ -7,6 +7,8 @@
  * @extends GLScene
  *
  * @protected {boolean} _needsUpdate
+ *
+ * @method createObject
  */
 
 ///////////////
@@ -65,13 +67,14 @@ class Scene3d extends GLScene {
     this._drawObjects();
   }
 
-  addObject (mesh, material) {
+  createObject (mesh, material) {
     let obj = new Object3d (
       this.gl,
       this,
       mesh,
       material);
     this.objects.push(obj);
+    return obj;
   }
 }
 

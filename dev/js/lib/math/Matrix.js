@@ -458,10 +458,18 @@ Matrix.create.rotationZ = function(angle) {
 		[	 0,	 0,  0, 1 ]
   ]);
 };
+Matrix.create.rotation3d = function (x,y,z) {
+	return Matrix.create.rotationZ(z).multiply(Matrix.create.rotationX(x)).multiply(Matrix.create.rotationY(y));
+}
 /**
  *	translation
  */
-Matrix.create.translation3d = function (vector) {
+Matrix.create.translation3d = function (...args) {
+	let vector;
+	if (args[0] instanceof Vector)
+		vector = args[0];
+	else
+		vector = new Vector([args[0], args[1], args[2]]);
 	return Matrix.create([
 		[1, 0, 0, 0],
 		[0, 1, 0, 0],
