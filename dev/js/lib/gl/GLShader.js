@@ -22,9 +22,10 @@ const AjaxRequest = require('lib/AjaxRequest');
 
 // store requests by url so we avoid doubling up
 let fileRequests = {};
+const vertexRegex = /gl_Position\s*=/;
 
 class GLShader {
-  constructor (gl, filePath, shaderType = 'VERTEX_SHADER') {
+  constructor (gl, filePath, shaderType, definitions) {
     this.ready = false;
     this._readyFns = [];
     if (!gl || !(gl instanceof WebGLRenderingContext)) {
@@ -32,8 +33,16 @@ class GLShader {
     }
 
     this.gl = gl;
-    this.type = gl[shaderType];
+    if (shaderType)
+      this.type = gl[shaderType];
     this.filePath = filePath;
+    this.prependString = "";
+
+    if (definitions) {
+      for (let key in definitions) {
+        this.prependString += "#define " + key + " " + definitions[key] + "\n";
+      }
+    }
 
     if (!fileRequests[filePath]) {
       // haven't gotten (or started to get) this one yet
@@ -51,8 +60,11 @@ class GLShader {
   }
 
   initialize (source) {
+    if (typeof this.type === 'undefined') {
+      this.type = vertexRegex.test(source) ? this.gl.VERTEX_SHADER : this.gl.FRAGMENT_SHADER;
+    }
     this.shader = this.gl.createShader(this.type);
-    this.gl.shaderSource(this.shader, source);
+    this.gl.shaderSource(this.shader, this.prependString + source);
     this.gl.compileShader(this.shader);
     // any errors?
     if (!this.gl.getShaderParameter(this.shader, this.gl.COMPILE_STATUS)) {

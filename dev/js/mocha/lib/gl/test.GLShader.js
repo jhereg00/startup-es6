@@ -16,30 +16,37 @@ describe("GLShader", function () {
     expect(init).to.throw(Error, /gl/i);
   });
   it("requests the file passed", function (done) {
-    let shader = new GLShader(gl, './glsl/object.vs.glsl');
+    let shader = new GLShader(gl, './glsl/test.vs.glsl');
     expect(AjaxRequest.activeRequests.length).to.equal(1);
-    expect(AjaxRequest.activeRequests[0].options.url).to.equal('./glsl/object.vs.glsl');
+    expect(AjaxRequest.activeRequests[0].options.url).to.equal('./glsl/test.vs.glsl');
     AjaxRequest.activeRequests[0].addStateListener(AjaxRequest.readyState.DONE, function () {
       done();
     });
   });
   it("does not make an additional request for a file already retrieved", function () {
-    let shader = new GLShader(gl, './glsl/object.vs.glsl');
+    let shader = new GLShader(gl, './glsl/test.vs.glsl');
     expect(AjaxRequest.activeRequests.length).to.equal(0);
   });
   it("creates a shader in the passed context", function () {
-    let shader = new GLShader(gl, './glsl/object.vs.glsl');
+    let shader = new GLShader(gl, './glsl/test.vs.glsl');
     expect(gl.getShaderParameter(shader.shader, gl.SHADER_TYPE)).to.equal(gl.VERTEX_SHADER);
   });
+  it("takes a guess at shader type by file contents", function (done) {
+    let shader = new GLShader(gl, './glsl/test.fs.glsl');
+    shader.addReadyListener(function () {
+      expect(gl.getShaderParameter(shader.shader, gl.SHADER_TYPE)).to.equal(gl.FRAGMENT_SHADER);
+      done();
+    });
+  });
   it("binds the shader to a passed program", function () {
-    let shader = new GLShader(gl, './glsl/object.vs.glsl');
+    let shader = new GLShader(gl, './glsl/test.vs.glsl');
     let program = gl.createProgram();
     shader.attachTo(program);
     expect(gl.getProgramParameter(program, gl.ATTACHED_SHADERS)).to.equal(1);
   });
   it("binds the shader to a passed program when done loading", function (done) {
     GLShader.purge();
-    let shader = new GLShader(gl, './glsl/object.vs.glsl');
+    let shader = new GLShader(gl, './glsl/test.vs.glsl');
     let program = gl.createProgram();
     shader.attachTo(program);
     expect(gl.getProgramParameter(program, gl.ATTACHED_SHADERS)).to.equal(0);

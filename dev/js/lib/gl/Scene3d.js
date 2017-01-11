@@ -1,8 +1,10 @@
 /***
  * Scene3d
  *
- * Standard 3d scene controller, using phong shading, deferred rendering, and a
- * bit of postprocessing.
+ * Standard 3d scene controller, using blinn-phong shading, deferred rendering,
+ * and a bit of postprocessing.
+ *
+ * @extends GLScene
  *
  * @protected {boolean} _needsUpdate
  */
@@ -13,6 +15,10 @@
 const GLScene = require('lib/gl/GLScene');
 const GLShader = require('lib/gl/GLShader');
 const GLProgram = require('lib/gl/GLProgram');
+const GLArrayBuffer = require('lib/gl/GLArrayBuffer');
+const GLElementArrayBuffer = require('lib/gl/GLElementArrayBuffer');
+
+const Matrix = require('lib/math/Matrix');
 
 ///////////////
 // constants / default settings
@@ -25,26 +31,27 @@ class Scene3d extends GLScene {
   // constructor
   constructor (...args) {
     super(...args);
-    console.log('Scene3d');
+    this.objects = [];
   }
 
   // properties
 
   // initialization functions
-  initializeShaders () {
-    this.shaders = {
-      objectVertex: new GLShader (this.gl, '/glsl/object.vs.glsl', 'VERTEX_SHADER'),
-      objectFragment: new GLShader (this.gl, '/glsl/object.fs.glsl', 'FRAGMENT_SHADER')
+  initializePrograms () {
+    // only define the output programs here
+    // the gBuffer programs are defined by the addition of objects
+    this.programs = {}
+  }
+  initializeBuffers () {
+    this.buffers = {
+      vertex3d: new GLArrayBuffer(this.gl),
+      vertexMaterial: new GLArrayBuffer(this.gl, 1, this.gl.INT),
+      elements: new GLElementArrayBuffer(this.gl)
     }
   }
-  initializePrograms () {
-    this.programs = {
-      gBuffer: new GLProgram (
-        this.gl,
-        [this.shaders.objectVertex, this.shaders.objectFragment],
-        ['aVertexPosition'],
-        ['uProjectionMatrix'])
-    }
+
+  _drawObjects (framebuffers) {
+    let objects = this.objects.filter((x) => !x.dynamic);
   }
   draw () {
     if (!this.ready) {
@@ -54,10 +61,14 @@ class Scene3d extends GLScene {
       return false;
     }
 
+    this.gl.viewport(0,0,this.width,this.height);
+    this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
     // first, let's draw our g-buffer
-    this.programs.gBuffer.use();
-    this.gl.uniformMatrix4fv(program.uniforms.uPerspectiveMatrix, false, new Float32Array([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]));
-    
+    this._drawObjects();
+  }
+
+  addObject (obj) {
+
   }
 }
 

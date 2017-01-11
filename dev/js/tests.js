@@ -1,4 +1,4 @@
-
+var postMocha;
 // require tests
 describe('lib', function () {
   describe('classes', function () {
@@ -12,11 +12,24 @@ describe('lib', function () {
     require('mocha/lib/gl/test.GLShader');
     require('mocha/lib/gl/test.GLProgram');
     require('mocha/lib/gl/test.GLBuffer');
+    require('mocha/lib/gl/test.GLArrayBuffer');
+    require('mocha/lib/gl/test.GLElementArrayBuffer');
+
+    require('mocha/lib/gl/test.Object3d');
   });
+
+  after(function () {
+    if (postMocha) {
+      postMocha();
+    }
+  })
 });
 
 // output test
-// window.Scene3d = require('lib/gl/Scene3d');
-// window.scene = new Scene3d (480,320);
-// scene.addTo(document.body);
-// scene.draw();
+// split into `postMocha` so it doesn't interfere with asynchronous tests
+postMocha = function () {
+  let Scene3d = require('lib/gl/Scene3d');
+  let scene = new Scene3d (480,320);
+  scene.addTo(document.body);
+  scene.draw();
+}

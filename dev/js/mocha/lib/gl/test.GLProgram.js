@@ -17,7 +17,7 @@ describe("GLProgram (note: these fail if the shader is invalid)", function () {
     expect(init).to.throw(Error, /gl.*argument/i);
   });
   it("creates a program and attaches shaders to it, waiting for shaders to load", function (done) {
-    let p = new GLProgram(gl, [new GLShader(gl, '/glsl/object.vs.glsl', 'VERTEX_SHADER'), new GLShader(gl, '/glsl/object.fs.glsl', 'FRAGMENT_SHADER')]);
+    let p = new GLProgram(gl, ['/glsl/test.vs.glsl','/glsl/test.fs.glsl']);
     p.addReadyListener(function () {
       expect(gl.getProgramParameter(p.program, gl.LINK_STATUS)).to.be.true;
       expect(gl.getProgramParameter(p.program, gl.ATTACHED_SHADERS)).to.equal(2);
@@ -27,7 +27,7 @@ describe("GLProgram (note: these fail if the shader is invalid)", function () {
   it("stores attribute locations for easy access", function (done) {
     let p = new GLProgram(
       gl,
-      [new GLShader(gl, '/glsl/object.vs.glsl', 'VERTEX_SHADER'), new GLShader(gl, '/glsl/object.fs.glsl', 'FRAGMENT_SHADER')],
+      ['/glsl/test.vs.glsl', '/glsl/test.fs.glsl'],
       ['aVertexPosition']);
     p.addReadyListener(function () {
       p.use();
@@ -39,7 +39,7 @@ describe("GLProgram (note: these fail if the shader is invalid)", function () {
   it("stores uniform locations for easy access", function (done) {
     let p = new GLProgram(
       gl,
-      [new GLShader(gl, '/glsl/object.vs.glsl', 'VERTEX_SHADER'), new GLShader(gl, '/glsl/object.fs.glsl', 'FRAGMENT_SHADER')],
+     ['/glsl/test.vs.glsl', '/glsl/test.fs.glsl'],
       null,
       ['uProjectionMatrix']);
     p.addReadyListener(function () {
@@ -52,7 +52,7 @@ describe("GLProgram (note: these fail if the shader is invalid)", function () {
   it("can have attributes and uniforms added later", function (done) {
     let p = new GLProgram(
       gl,
-      [new GLShader(gl, '/glsl/object.vs.glsl', 'VERTEX_SHADER'), new GLShader(gl, '/glsl/object.fs.glsl', 'FRAGMENT_SHADER')]);
+     ['/glsl/test.vs.glsl', '/glsl/test.fs.glsl']);
     p.addReadyListener(function () {
       p.addAttribute('aVertexPosition');
       p.addUniform('uProjectionMatrix');
@@ -66,11 +66,22 @@ describe("GLProgram (note: these fail if the shader is invalid)", function () {
     GLShader.purge();
     let p = new GLProgram(
       gl,
-      [new GLShader(gl, '/glsl/object.vs.glsl', 'VERTEX_SHADER'), new GLShader(gl, '/glsl/object.fs.glsl', 'FRAGMENT_SHADER')]);
+      ['/glsl/test.vs.glsl', '/glsl/test.fs.glsl']);
     expect(p.use()).to.be.false;
     p.addReadyListener(function () {
       p.use();
       expect(p.program).to.eql(gl.getParameter(gl.CURRENT_PROGRAM));
+      done();
+    });
+  });
+  it("gets the currently active program", function (done) {
+    let p = new GLProgram(
+      gl,
+      ['/glsl/test.vs.glsl', '/glsl/test.fs.glsl'],
+      null, null, { cacheBust : "1" });
+    p.addReadyListener(function () {
+      p.use();
+      expect(GLProgram.getActive(gl)).to.equal(p);
       done();
     });
   });

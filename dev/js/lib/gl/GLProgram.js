@@ -4,7 +4,7 @@
  * Creates and controls a shader program.
  *
  * @param {WebGLRenderingContext} gl
- * @param {GLShader[]} shaders
+ * @param {String[]} shaderUrls
  * @param {String[]} attributeNames
  * @param {String[]} uniformNames
  *
@@ -20,14 +20,20 @@
  * @property {object} uniforms - object that stores uniform locations for binding data
  * @property a - alias for attributes
  * @property u - alias for uniforms
+ *
+ * @static getBy - gets or creates a program as needed based on the passed arguments
+ * @static getActive - gets the currently active program for the passed WebGLRenderingContext
  */
 // requirements
+const GLShader = require('lib/gl/GLShader');
 
 // settings
+let createdPrograms = [];
+let activePrograms = [];
 
 // class
 class GLProgram {
-  constructor (gl, shaders, attributeNames, uniformNames) {
+  constructor (gl, shaders, attributeNames, uniformNames, definitions) {
     this.ready = false;
     this._readyFns = [];
     if (!gl || !(gl instanceof WebGLRenderingContext)) {
@@ -39,6 +45,7 @@ class GLProgram {
     this.program = program;
 
     let shadersReady = 0;
+    shaders = shaders.map((x) => new GLShader(this.gl, x, null, definitions));
     shaders.forEach((function (s) {
       s.addReadyListener((function () {
         shadersReady++;
@@ -53,6 +60,14 @@ class GLProgram {
     this.attributes = {};
     this.uniforms = {};
     this.shaders = shaders;
+
+    // store arguments for comparison
+    let definitionsString = "";
+    for (let prop in definitions) {
+      definitionsString += prop + "=" + definitions[prop] + "&";
+    }
+    this._passedArguments = Array.from(arguments).slice(1,4).join(';') + ';' + definitionsString;
+    createdPrograms.push(this);
   }
   _initialize () {
     this.gl.linkProgram(this.program);
@@ -107,6 +122,14 @@ class GLProgram {
       this.uniforms[name] = this.gl.getUniformLocation(this.program, name);
     }).bind(this));
 
+    let activeProgram = GLProgram.getActive(this.gl);
+    if (activeProgram) {
+      activePrograms.splice(activePrograms.indexOf(activeProgram),1,this);
+    }
+    else {
+      activePrograms.push(this);
+    }
+
     return true;
   }
 
@@ -115,6 +138,20 @@ class GLProgram {
   }
   get u() {
     return this.uniforms || {};
+  }
+
+  static getBy (...args) {
+    createdPrograms.forEach(function (p) {
+      if (p.gl === args[0] &&
+          p._passedArguments === args.slice(1).join(';')
+        ) {
+        return p;
+      }
+    });
+    return new GLProgram (args[0], args[1], args[2], args[3], args[4]);
+  }
+  static getActive (gl) {
+    return activePrograms.filter((p) => p.gl === gl)[0] || null;
   }
 }
 

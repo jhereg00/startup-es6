@@ -56,8 +56,8 @@ class GLScene {
     // make nearer things obscure farther things
     this.gl.depthFunc(this.gl.LEQUAL);
 
-    this.initializeShaders();
     this.initializePrograms();
+    this.initializeBuffers();
 
     let programCount = Object.keys(this.programs).length;
     let programReadyCount = 0;
@@ -67,6 +67,8 @@ class GLScene {
         if (programReadyCount === programCount) {
           this.ready = true;
           this._readyFns.forEach(fn => fn());
+          if (this._drawOnReady)
+            this.draw();
         }
       }).bind(this));
     }
@@ -98,9 +100,6 @@ class GLScene {
   }
 
   // interface functions
-  initializeShaders () {
-    console.error(this.constructor.name + ' does not override initializeShaders');
-  }
   initializePrograms () {
     console.error(this.constructor.name + ' does not override initializePrograms');
   }
