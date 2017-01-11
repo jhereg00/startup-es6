@@ -17,6 +17,7 @@ const GLShader = require('lib/gl/GLShader');
 const GLProgram = require('lib/gl/GLProgram');
 const GLArrayBuffer = require('lib/gl/GLArrayBuffer');
 const GLElementArrayBuffer = require('lib/gl/GLElementArrayBuffer');
+const Object3d = require('lib/gl/Object3d');
 
 const Matrix = require('lib/math/Matrix');
 
@@ -44,31 +45,33 @@ class Scene3d extends GLScene {
   }
   initializeBuffers () {
     this.buffers = {
-      vertex3d: new GLArrayBuffer(this.gl),
-      vertexMaterial: new GLArrayBuffer(this.gl, 1, this.gl.INT),
+      aPosition: new GLArrayBuffer(this.gl),
       elements: new GLElementArrayBuffer(this.gl)
     }
   }
 
   _drawObjects (framebuffers) {
-    let objects = this.objects.filter((x) => !x.dynamic);
+    this.objects.forEach((function(o) {
+      if (o.ready)
+        o.draw(Matrix.I(4));
+      else
+        o.addReadyListener(this.draw.bind(this));
+    }).bind(this));
   }
   draw () {
-    if (!this.ready) {
-      if (!this._drawOnReady)
-        this.addReadyListener(this.draw.bind(this));
-      this._drawOnReady = true;
-      return false;
-    }
-
     this.gl.viewport(0,0,this.width,this.height);
     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
     // first, let's draw our g-buffer
     this._drawObjects();
   }
 
-  addObject (obj) {
-
+  addObject (mesh, material) {
+    let obj = new Object3d (
+      this.gl,
+      this,
+      mesh,
+      material);
+    this.objects.push(obj);
   }
 }
 
