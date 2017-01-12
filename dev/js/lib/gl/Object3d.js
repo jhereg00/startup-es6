@@ -72,8 +72,8 @@ class Object3d {
 
   get mvMatrix () {
     if (this._needsUpdate) {
-      this._worldMatrix = Matrix.create.translation3d(this.position.x, this.position.y, this.position.z);
-      this._modelMatrix = Matrix.create.rotation3d(this.rotation.x, this.rotation.y, this.rotation.z);
+      this._worldMatrix = Matrix.translation3d(this.position.x, this.position.y, this.position.z);
+      this._modelMatrix = Matrix.rotation3d(this.rotation.x, this.rotation.y, this.rotation.z);
       this._mvMatrix = this._worldMatrix.multiply(this._modelMatrix);
       this._needsUpdate = false;
     }

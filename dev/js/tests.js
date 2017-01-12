@@ -8,6 +8,9 @@ describe('lib', function () {
   describe('helpers', function () {
     require('mocha/lib/test.extendObject');
   });
+  describe('math', function () {
+    require('mocha/lib/math/test.Matrix');
+  });
   describe('gl', function () {
     require('mocha/lib/gl/test.GLShader');
     require('mocha/lib/gl/test.GLProgram');
