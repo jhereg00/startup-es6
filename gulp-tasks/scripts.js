@@ -5,6 +5,7 @@
 var gulp = require('gulp'),
     babel = require('gulp-babel'),
     browserify = require('browserify'),
+    babelify = require('babelify'),
     sourcemaps = require('gulp-sourcemaps'),
     uglify = require('gulp-uglify'),
     source = require('vinyl-source-stream'),
@@ -20,10 +21,11 @@ function browserifyFile (fileName) {
   // set up the browserify instance on a task basis
   var b = browserify({
     entries: './'+fileName,
-    debug: false,
+    debug: true,
     basedir: global.devPath + '/js/',
     paths: ['./node_modules','./']
-  });
+  })
+    //.transform(babelify);
 
   var bStream = b.bundle()
     .on('error', function (err) {
@@ -32,22 +34,16 @@ function browserifyFile (fileName) {
     })
     .pipe(source(fileName))
     .pipe(buffer())
+    .pipe(sourcemaps.init({loadMaps: true}))
     .pipe(rename({
       extname: '.raw.js'
     }))
     .pipe(gulp.dest(global.distPath + '/js'))
-    .pipe(sourcemaps.init({loadMaps: true}))
     // Add transformation tasks to the pipeline here.
     .pipe(babel())
     .pipe(rename(function (path) {
       path.basename = path.basename.replace(/(\.\w+)?$/,'')
     }))
-    .pipe(gulp.dest(global.distPath + '/js'))
-    .pipe(rename({
-      extname: '.min.js'
-    }))
-    .pipe(stripDebug())
-    .pipe(uglify())
     .pipe(sourcemaps.write('./'))
     .pipe(gulp.dest(global.distPath + '/js'))
     ;
@@ -61,7 +57,16 @@ module.exports = function (cb) {
   function checkDone () {
     done++;
     if (done === streams && cb) {
-      cb();
+      gulp.src([global.distPath + '/js/*.js','!**/*.min.js','!**/*.raw.js'])
+        .pipe(sourcemaps.init({loadMaps: true}))
+        .pipe(rename({
+          extname: '.min.js'
+        }))
+        // .pipe(stripDebug())
+        .pipe(uglify())
+        .pipe(sourcemaps.write('./'))
+        .pipe(gulp.dest(global.distPath + '/js'))
+        .on('end', cb);
     }
   }
   function addStream (s) {

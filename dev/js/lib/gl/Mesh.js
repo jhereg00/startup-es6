@@ -8,6 +8,12 @@ class Mesh {
     this.elements = elementArray || [];
     this.normals = normalArray || [];
     this.uv = uvArray || [];
+
+    for (let i = this.normals.length, len = this.vertices.length; i < len; i += 3) {
+      this.normals.push(0,0,1);
+    }
+
+    console.log(this);
   }
 
   getVertex (index, size = 3) {

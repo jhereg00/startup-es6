@@ -23,27 +23,32 @@ describe('lib', function () {
 
   after(function () {
     let e = new Event('mochadone');
-    document.dispatchEvent(e);
+    // document.dispatchEvent(e);
   })
 });
 
 // output test
 // split into `postMocha` so it doesn't interfere with asynchronous tests
-document.addEventListener('mochadone', function () {
+function visualTest () {
   let Scene3d = require('lib/gl/Scene3d');
   let Object3d = require('lib/gl/Object3d');
-  let Mesh = require('lib/gl/Mesh');
-  window.scene = new Scene3d (480,320);
-  scene.addTo(document.body);
+  let Cylinder = require('lib/gl/primitives/Cylinder');
+  window.scene = new Scene3d (1200,1200);
+  scene.addTo(canvasContainer);
   let obj = new Object3d(
-    new Mesh(
-      [-.5,-.5,0,.5,-.5,0,.5,.5,0],
-      [0,1,2])
+    new Cylinder(.25,.5,10,2)
   );
+  let obj2 = new Object3d(
+    new Cylinder(.25,.5,30,2)
+  );
+  obj2.moveBy(0,-.5,.5);
   scene.addObject(obj);
+  scene.addObject(obj2);
   (function loop () {
-    obj.rotateBy(0,0,Math.PI / 180);
+    obj.rotateBy(0, Math.PI / 180,0);
     scene.draw();
     requestAnimationFrame(loop);
   })();
-});
+}
+document.addEventListener('mochadone', visualTest);
+visualTest();

@@ -38,6 +38,7 @@ class Object3d {
     this._modelMatrix = Matrix.I(4);
     this._worldMatrix = Matrix.I(4);
     this._mvMatrix = Matrix.I(4);
+    this._normalMatrix = Matrix.I(4);
 
     this.position = {
       x: 0, y: 0, z: 0
@@ -47,49 +48,29 @@ class Object3d {
     }
   }
 
+  _updateMatrices () {
+    this._worldMatrix = Matrix.translation3d(this.position.x, this.position.y, this.position.z);
+    this._modelMatrix = Matrix.rotation3d(this.rotation.x, this.rotation.y, this.rotation.z);
+    this._mvMatrix = this._worldMatrix.multiply(this._modelMatrix);
+    if (this.parent)
+      this._mvMatrix = this.parent.mvMatrix.multiply(this._mvMatrix);
+    this._normalMatrix = this._mvMatrix.inverse().transpose();
+  }
   get mvMatrix () {
     if (this._needsUpdate) {
-      this._worldMatrix = Matrix.translation3d(this.position.x, this.position.y, this.position.z);
-      this._modelMatrix = Matrix.rotation3d(this.rotation.x, this.rotation.y, this.rotation.z);
-      this._mvMatrix = this._worldMatrix.multiply(this._modelMatrix);
-      if (this.parent)
-        this._mvMatrix = this.parent.mvMatrix.multiply(this._mvMatrix);
+      this._updateMatrices();
       this._needsUpdate = false;
     }
     return this._mvMatrix;
   }
+  get normalMatrix () {
+    if (this._needsUpdate) {
+      this._updateMatrices();
+      this._needsUpdate = false;
+    }
+    return this._normalMatrix;
+  }
 
-  // draw (projectionMatrix, parentMatrix) {
-  //   if (!this.ready)
-  //     return false;
-  //
-  //   if (GLProgram.getActive(this.gl) !== this.program) {
-  //     this.program.use();
-  //     this.gl.uniformMatrix4fv(this.program.u.uProjectionMatrix, false, new Float32Array(projectionMatrix.flatten()));
-  //   }
-  //
-  //   // set up this model-view matrix
-  //   let mvMatrix;
-  //   if (!parentMatrix) {
-  //     mvMatrix = this.mvMatrix;
-  //   }
-  //   else {
-  //     mvMatrix = parentMatrix.multiply(this.mvMatrix);
-  //   }
-  //   this.gl.uniformMatrix4fv(this.program.u.uMVMatrix, false, new Float32Array(mvMatrix.flatten()));
-  //
-  //   // temp
-  //   var vertexArray = [
-  //     1,1,0,
-  //     .5,-.5,0,
-  //     0,.5,0
-  //   ];
-  //   var color = [.2,.8,.9];
-  //   this.scene.buffers.aPosition.bindData(this.program.a.aPosition, vertexArray);
-  //   this.scene.buffers.elements.bindData([0,1,2]);
-  //   this.gl.uniform3fv(this.program.u.uColor, new Float32Array(color));
-  //   this.gl.drawElements(this.gl.TRIANGLES, 3, this.gl.UNSIGNED_SHORT, 0);
-  // }
   addObject (object) {
     object.parent = this;
     this.children.push(object);

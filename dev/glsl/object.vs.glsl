@@ -2,13 +2,21 @@
 precision mediump float;
 
 attribute vec3 aPosition;
+attribute vec3 aNormal;
 
 uniform mat4 uProjectionMatrix;
 uniform mat4 uMVMatrix;
+uniform mat4 uNormalMatrix;
 
-varying vec3 vPos;
+varying vec4 vPos;
+varying vec3 vNormal;
+varying float vDepth;
 
 void main () {
-  gl_Position = uProjectionMatrix * uMVMatrix * vec4(aPosition, 1.0);
-  vPos = gl_Position.xyz;
+  vec4 worldPosition = uMVMatrix * vec4(aPosition, 1.0);
+  gl_Position = uProjectionMatrix * worldPosition;
+  vPos = worldPosition;
+  vNormal = (uNormalMatrix * vec4(aNormal, 0.0)).xyz;
+  vDepth = (gl_Position.z + 1.0 / 2.0) / gl_Position.w;
+  //vNormal;
 }
