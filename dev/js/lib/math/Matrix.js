@@ -246,18 +246,12 @@ class Matrix {
 	 *	flatten
 	 *	@returns {Array} values as a single array
 	 */
-	flatten () {
+	flatten (forceType) {
 		let out = [];
-		let type = Uint16Array;
 		for (let i = 0; i < this.elements.length; i++) {
 			out = out.concat(this.elements[i]);
-			this.elements[i].forEach(function (x) {
-				if (x % 1 !== 0) {
-					type = Float32Array;
-				}
-			});
 		}
-		return new type(out);
+		return new Float32Array(out);
 	}
 
 	/**

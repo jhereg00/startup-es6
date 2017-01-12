@@ -9,8 +9,6 @@
  * replaced. Material, in particular, is used to determine the shader program
  * that will be used by this object.
  *
- * @param {WebGLRenderingContext} gl
- * @param {Scene3d} scene - can be set later
  * @param {Mesh} mesh
  * @param {Material} material
  *
@@ -28,20 +26,12 @@
  * @method rotateTo
  * @method rotateBy
  */
-const GLProgram = require('lib/gl/GLProgram');
 const Matrix = require('lib/math/Matrix');
+const Mesh = require('lib/gl/Mesh');
 
 class Object3d {
-  constructor (gl, scene, mesh, material) {
-    if (!gl || !(gl instanceof WebGLRenderingContext)) {
-      throw new Error('Object3d requires a WebGLRenderingContext as its first argument');
-    }
-    this.ready = false;
-    this._readyFns = [];
-
-    this.gl = gl;
-    this.scene = scene;
-    this.mesh = mesh;
+  constructor (mesh, material) {
+    this.mesh = mesh || new Mesh();
     this.material = material;
     this.children = [];
 
@@ -55,19 +45,6 @@ class Object3d {
     this.rotation = {
       x: 0, y: 0, z: 0
     }
-
-    this.program = GLProgram.getBy(
-      this.gl,
-      ['/glsl/object.vs.glsl','/glsl/object.fs.glsl'],
-      ['aPosition'],
-      ['uProjectionMatrix','uMVMatrix','uColor'],
-      {
-        COLOR_TEXTURE: this.material && this.material.texture ? 1 : 0
-      });
-    this.program.addReadyListener((function () {
-      this.ready = true;
-      this._readyFns.forEach(fn => fn());
-    }).bind(this));
   }
 
   get mvMatrix () {
@@ -75,56 +52,60 @@ class Object3d {
       this._worldMatrix = Matrix.translation3d(this.position.x, this.position.y, this.position.z);
       this._modelMatrix = Matrix.rotation3d(this.rotation.x, this.rotation.y, this.rotation.z);
       this._mvMatrix = this._worldMatrix.multiply(this._modelMatrix);
+      if (this.parent)
+        this._mvMatrix = this.parent.mvMatrix.multiply(this._mvMatrix);
       this._needsUpdate = false;
     }
     return this._mvMatrix;
   }
 
-  draw (projectionMatrix, parentMatrix) {
-    if (!this.ready)
-      return false;
-
-    if (GLProgram.getActive(this.gl) !== this.program) {
-      this.program.use();
-      this.gl.uniformMatrix4fv(this.program.u.uProjectionMatrix, false, new Float32Array(projectionMatrix.flatten()));
-    }
-
-    // set up this model-view matrix
-    let mvMatrix;
-    if (!parentMatrix) {
-      mvMatrix = this.mvMatrix;
-    }
-    else {
-      mvMatrix = parentMatrix.multiply(this.mvMatrix);
-    }
-    this.gl.uniformMatrix4fv(this.program.u.uMVMatrix, false, new Float32Array(mvMatrix.flatten()));
-
-    // temp
-    var vertexArray = [
-      1,1,0,
-      .5,-.5,0,
-      0,.5,0
-    ];
-    var color = [.2,.8,.9];
-    this.scene.buffers.aPosition.bindData(this.program.a.aPosition, vertexArray);
-    this.scene.buffers.elements.bindData([0,1,2]);
-    this.gl.uniform3fv(this.program.u.uColor, new Float32Array(color));
-    this.gl.drawElements(this.gl.TRIANGLES, 3, this.gl.UNSIGNED_SHORT, 0);
-  }
-  addObject (object) {}
-
-  addReadyListener (fn) {
-    if (!this.ready)
-      this._readyFns.push(fn);
-    else
-      fn();
+  // draw (projectionMatrix, parentMatrix) {
+  //   if (!this.ready)
+  //     return false;
+  //
+  //   if (GLProgram.getActive(this.gl) !== this.program) {
+  //     this.program.use();
+  //     this.gl.uniformMatrix4fv(this.program.u.uProjectionMatrix, false, new Float32Array(projectionMatrix.flatten()));
+  //   }
+  //
+  //   // set up this model-view matrix
+  //   let mvMatrix;
+  //   if (!parentMatrix) {
+  //     mvMatrix = this.mvMatrix;
+  //   }
+  //   else {
+  //     mvMatrix = parentMatrix.multiply(this.mvMatrix);
+  //   }
+  //   this.gl.uniformMatrix4fv(this.program.u.uMVMatrix, false, new Float32Array(mvMatrix.flatten()));
+  //
+  //   // temp
+  //   var vertexArray = [
+  //     1,1,0,
+  //     .5,-.5,0,
+  //     0,.5,0
+  //   ];
+  //   var color = [.2,.8,.9];
+  //   this.scene.buffers.aPosition.bindData(this.program.a.aPosition, vertexArray);
+  //   this.scene.buffers.elements.bindData([0,1,2]);
+  //   this.gl.uniform3fv(this.program.u.uColor, new Float32Array(color));
+  //   this.gl.drawElements(this.gl.TRIANGLES, 3, this.gl.UNSIGNED_SHORT, 0);
+  // }
+  addObject (object) {
+    object.parent = this;
+    this.children.push(object);
   }
 
+  _flagForUpdate () {
+    this._needsUpdate = true;
+    this.children.forEach(function (o) {
+      o._flagForUpdate();
+    });
+  }
   moveTo (x,y,z) {
     this.position = {
       x: x, y: y, z: z
     }
-    this._needsUpdate = true;
+    this._flagForUpdate();
   }
   moveBy (x,y,z) {
     this.position = {
@@ -132,13 +113,13 @@ class Object3d {
       y: this.position.y + y,
       z: this.position.z + z
     }
-    this._needsUpdate = true;
+    this._flagForUpdate();
   }
   rotateTo (x,y,z) {
     this.rotation = {
       x: x, y: y, z: z
     }
-    this._needsUpdate = true;
+    this._flagForUpdate();
   }
   rotateBy (x,y,z) {
     this.rotation = {
@@ -146,7 +127,7 @@ class Object3d {
       y: this.rotation.y + y,
       z: this.rotation.z + z
     }
-    this._needsUpdate = true;
+    this._flagForUpdate();
   }
 }
 

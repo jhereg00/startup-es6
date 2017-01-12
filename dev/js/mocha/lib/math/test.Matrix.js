@@ -130,9 +130,9 @@ describe("Matrix", function () {
         let m1 = new Matrix([[1,2],[3,4]]);
         expect(m1.flatten()).to.eql(new Uint16Array([1,2,3,4]));
       });
-      it("returns an array that is a Uint16Array if all integers, or Float32Array otherwise", function () {
+      it("returns an array that is a Float32Array", function () {
         let m1 = new Matrix([[1,2],[3,4]]);
-        expect(m1.flatten()).to.be.instanceof(Uint16Array);
+        expect(m1.flatten()).to.be.instanceof(Float32Array);
         m1 = new Matrix([[.1,.2],[.3,.4]]);
         expect(m1.flatten()).to.be.instanceof(Float32Array);
       });

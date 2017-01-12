@@ -22,22 +22,28 @@ describe('lib', function () {
   });
 
   after(function () {
-    if (postMocha) {
-      postMocha();
-    }
+    let e = new Event('mochadone');
+    document.dispatchEvent(e);
   })
 });
 
 // output test
 // split into `postMocha` so it doesn't interfere with asynchronous tests
-postMocha = function () {
+document.addEventListener('mochadone', function () {
   let Scene3d = require('lib/gl/Scene3d');
-  let scene = new Scene3d (480,320);
+  let Object3d = require('lib/gl/Object3d');
+  let Mesh = require('lib/gl/Mesh');
+  window.scene = new Scene3d (480,320);
   scene.addTo(document.body);
-  var obj = scene.createObject();
+  let obj = new Object3d(
+    new Mesh(
+      [-.5,-.5,0,.5,-.5,0,.5,.5,0],
+      [0,1,2])
+  );
+  scene.addObject(obj);
   (function loop () {
     obj.rotateBy(0,0,Math.PI / 180);
     scene.draw();
     requestAnimationFrame(loop);
   })();
-}
+});
