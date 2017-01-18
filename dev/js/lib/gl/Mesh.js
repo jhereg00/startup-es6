@@ -12,18 +12,16 @@ class Mesh {
     for (let i = this.normals.length, len = this.vertices.length; i < len; i += 3) {
       this.normals.push(0,0,1);
     }
-
-    console.log(this);
   }
 
   getVertex (index, size = 3) {
-    return this.vertices.slice(index * size, size);
+    return this.vertices.slice(index * size, index * size + size);
   }
   getNormal (index, size = 3) {
-    return this.normals.slice(index * size, size);
+    return this.normals.slice(index * size, index * size + size);
   }
   getUV (index, size = 2) {
-    return this.uv.slice(index * size, size);
+    return this.uv.slice(index * size, index * size + size);
   }
 }
 

@@ -17,6 +17,6 @@ void main () {
   gl_Position = uProjectionMatrix * worldPosition;
   vPos = worldPosition;
   vNormal = (uNormalMatrix * vec4(aNormal, 0.0)).xyz;
-  vDepth = (gl_Position.z + 1.0 / 2.0) / gl_Position.w;
+  vDepth = (gl_Position.z) / gl_Position.w;
   //vNormal;
 }

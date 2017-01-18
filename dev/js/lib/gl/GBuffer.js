@@ -9,7 +9,7 @@
  *  2: depth
  */
 const GLFramebuffer = require('lib/gl/GLFramebuffer');
-const GLTexture2d = require('lib/gl/GLTexture2d');
+const GLTextureFloat = require('lib/gl/GLTextureFloat');
 const GLTextureDepth = require('lib/gl/GLTextureDepth');
 
 class GBuffer extends GLFramebuffer {
@@ -23,10 +23,10 @@ class GBuffer extends GLFramebuffer {
       throw new Error("GBuffer failed to get WEBGL_draw_buffers extension");
     }
 
-    this.colorTexture = new GLTexture2d (this.gl, null, this.size, this.size);
-    this.normalTexture = new GLTexture2d (this.gl, null, this.size, this.size);
-    this.depthRGBTexture = new GLTexture2d (this.gl, null, this.size, this.size);
-    this.positionTexture = new GLTexture2d (this.gl, null, this.size, this.size);
+    this.colorTexture = new GLTextureFloat (this.gl, null, this.size, this.size);
+    this.normalTexture = new GLTextureFloat (this.gl, null, this.size, this.size);
+    this.depthRGBTexture = new GLTextureFloat (this.gl, null, this.size, this.size);
+    this.positionTexture = new GLTextureFloat (this.gl, null, this.size, this.size);
     this.depthTexture = new GLTextureDepth (this.gl, null, this.size, this.size);
 
     this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.framebuffer);

@@ -5,7 +5,6 @@
 var gulp = require('gulp'),
     babel = require('gulp-babel'),
     browserify = require('browserify'),
-    babelify = require('babelify'),
     sourcemaps = require('gulp-sourcemaps'),
     uglify = require('gulp-uglify'),
     source = require('vinyl-source-stream'),

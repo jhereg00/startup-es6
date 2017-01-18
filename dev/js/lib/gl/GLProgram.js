@@ -133,6 +133,10 @@ class GLProgram {
     return true;
   }
 
+  getStructPosition (rootName, index, property) {
+    return this.gl.getUniformLocation(this.program, rootName + '[' + index + '].' + property);
+  }
+
   get a() {
     return this.attributes || {};
   }

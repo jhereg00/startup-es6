@@ -49,7 +49,7 @@ class GLScene {
     this.width = width;
     this.height = height;
 
-    this.backgroundColor = new Color(0x000000);
+    this.backgroundColor = new Color(0,0,0,0);
     this.gl.clearDepth(1.0);
     // enable depth testing
     this.gl.enable(this.gl.DEPTH_TEST);
