@@ -60,7 +60,7 @@ class Scene3d extends GLScene {
         this.gl,
         ['/glsl/out.vs.glsl','/glsl/lighting.fs.glsl'],
         ['aPosition','aUV'],
-        ['uNormalTexture','uPositionTexture','uLights','uNumLights']
+        ['uNormalTexture','uPositionTexture','uColorTexture','uLights','uNumLights','uCameraPosition']
       ),
       compile: new GLProgram(
         this.gl,
@@ -135,19 +135,38 @@ class Scene3d extends GLScene {
     // big ol' temp
     let positionLoc = this.programs.lighting.getStructPosition('uLights',0,'position');
     let colorLoc = this.programs.lighting.getStructPosition('uLights',0,'color');
+    let specularColorLoc = this.programs.lighting.getStructPosition('uLights',0,'specularColor');
     let radiusLoc = this.programs.lighting.getStructPosition('uLights',0,'radius');
-    this.gl.uniform3fv(positionLoc, new Float32Array([-1,0,-4]));
-    this.gl.uniform3fv(colorLoc, new Float32Array([1,1,1]));
-    this.gl.uniform1f(radiusLoc, 50);
+    let intensityLoc = this.programs.lighting.getStructPosition('uLights',0,'intensity');
+    let ambienceLoc = this.programs.lighting.getStructPosition('uLights',0,'ambience');
+    this.gl.uniform3fv(positionLoc, new Float32Array([-2.0,0.0,-6.0]));
+    this.gl.uniform3fv(colorLoc, new Float32Array([1,0,0]));
+    this.gl.uniform3fv(specularColorLoc, new Float32Array([1,.7,.7]));
+    this.gl.uniform1f(radiusLoc, 25);
+    this.gl.uniform1f(intensityLoc, 1.1);
+    this.gl.uniform1f(ambienceLoc, 0);
 
     positionLoc = this.programs.lighting.getStructPosition('uLights',1,'position');
     colorLoc = this.programs.lighting.getStructPosition('uLights',1,'color');
     radiusLoc = this.programs.lighting.getStructPosition('uLights',1,'radius');
-    this.gl.uniform3fv(positionLoc, new Float32Array([6,2,1]));
+    intensityLoc = this.programs.lighting.getStructPosition('uLights',1,'intensity');
+    ambienceLoc = this.programs.lighting.getStructPosition('uLights',1,'ambience');
     this.gl.uniform3fv(colorLoc, new Float32Array([.2,.2,.4]));
-    this.gl.uniform1f(radiusLoc, 50);
+    this.gl.uniform1f(ambienceLoc, 1);
 
-    this.gl.uniform1i(this.programs.lighting.u.uNumLights, 2);
+    positionLoc = this.programs.lighting.getStructPosition('uLights',2,'position');
+    colorLoc = this.programs.lighting.getStructPosition('uLights',2,'color');
+    specularColorLoc = this.programs.lighting.getStructPosition('uLights',2,'specularColor');
+    radiusLoc = this.programs.lighting.getStructPosition('uLights',2,'radius');
+    intensityLoc = this.programs.lighting.getStructPosition('uLights',2,'intensity');
+    ambienceLoc = this.programs.lighting.getStructPosition('uLights',2,'ambience');
+    this.gl.uniform3fv(positionLoc, new Float32Array([5.0,0.0,1.0]));
+    this.gl.uniform3fv(colorLoc, new Float32Array([0,.5,1.0]));
+    this.gl.uniform3fv(specularColorLoc, new Float32Array([0,.8,1]));
+    this.gl.uniform1f(radiusLoc, 50);
+    this.gl.uniform1f(intensityLoc, .2);
+
+    this.gl.uniform1i(this.programs.lighting.u.uNumLights, 3);
 
     this.gl.activeTexture(this.gl.TEXTURE0);
     this.framebuffers.gBuffer.normalTexture.bind();
@@ -155,13 +174,17 @@ class Scene3d extends GLScene {
     this.gl.activeTexture(this.gl.TEXTURE1);
     this.framebuffers.gBuffer.positionTexture.bind();
     this.gl.uniform1i(this.programs.lighting.u.uPositionTexture, 1);
+    this.gl.activeTexture(this.gl.TEXTURE2);
+    this.framebuffers.gBuffer.colorTexture.bind();
+    this.gl.uniform1i(this.programs.lighting.u.uColorTexture, 2);
+
+    this.gl.uniform3fv(this.programs.lighting.u.uCameraPosition, new Float32Array([this.activeCamera.position.x, this.activeCamera.position.y, this.activeCamera.position.z]));
 
     this.gl.drawElements(this.gl.TRIANGLES, 6, this.gl.UNSIGNED_SHORT, 0);
   }
-  _drawOutDebug () {
-    if (!this.programs.out.ready || !this.programs.compile.ready)
+  _drawCompiled () {
+    if (!this.programs.compile.ready)
       return false;
-
     // draw compiled buffer, with color * light
     this.programs.compile.use();
     this.framebuffers.compiled.use();
@@ -178,6 +201,10 @@ class Scene3d extends GLScene {
     this.gl.uniform1i(this.programs.compile.u.uLightingTexture, 1);
 
     this.gl.drawElements(this.gl.TRIANGLES, 6, this.gl.UNSIGNED_SHORT, 0);
+  }
+  _drawOutDebug () {
+    if (!this.programs.out.ready || !this.programs.compile.ready)
+      return false;
 
 
     // draw tiled output for debugging
@@ -199,11 +226,11 @@ class Scene3d extends GLScene {
     this.gl.drawElements(this.gl.TRIANGLES, 6, this.gl.UNSIGNED_SHORT, 0);
 
     this.buffers.aPositionOut.bindData(this.programs.out.a.aPosition, [-1,0,0,0,0,-1,-1,-1]);
-    this.framebuffers.lightingBuffer.texture.bind();
+    this.framebuffers.gBuffer.depthRGBTexture.bind();
     this.gl.drawElements(this.gl.TRIANGLES, 6, this.gl.UNSIGNED_SHORT, 0);
 
     this.buffers.aPositionOut.bindData(this.programs.out.a.aPosition, [0,0,1,0,1,-1,0,-1]);
-    this.framebuffers.compiled.texture.bind();
+    this.framebuffers.lightingBuffer.texture.bind();
     this.gl.drawElements(this.gl.TRIANGLES, 6, this.gl.UNSIGNED_SHORT, 0);
   }
   draw () {
@@ -212,6 +239,7 @@ class Scene3d extends GLScene {
     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
     this._drawObjects();
     this._drawLighting();
+    //this._drawCompiled();
 
     this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
     this._drawOutDebug();

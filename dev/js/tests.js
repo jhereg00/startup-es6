@@ -47,7 +47,7 @@ function visualTest () {
   let obj3 = new Object3d(
     new Cylinder(.1,.1,4)
   );
-  obj3.moveTo(-1,0,-4);
+  obj3.moveTo(-2,0,-6);
   let cam = new PerspectiveCamera(30, 1, .5, 15);
   cam.moveTo(0,0,-20);
   scene.addObject(obj);
@@ -55,8 +55,11 @@ function visualTest () {
   scene.addObject(obj3);
   scene.setActiveCamera(cam);
   console.log(cam, cam.projectionMatrix.inspect(), cam.positionMatrix.inspect(), cam.perspectiveMatrix.inspect());
+  let camAngle = 0;
   (function loop () {
     obj.rotateBy(Math.PI / 180,0,0);
+    camAngle += Math.PI / 360;
+    cam.moveTo(Math.cos(camAngle) * -20, 0, Math.sin(camAngle) * -20);
     scene.draw();
     requestAnimationFrame(loop);
   })();
