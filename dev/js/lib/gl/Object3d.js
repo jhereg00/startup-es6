@@ -28,9 +28,12 @@
  */
 const Matrix = require('lib/math/Matrix');
 const Mesh = require('lib/gl/Mesh');
+const Positionable = require('lib/gl/Positionable');
 
-class Object3d {
+class Object3d extends Positionable {
   constructor (mesh, material) {
+    super();
+
     this.mesh = mesh || new Mesh();
     this.material = material;
     this.children = [];
@@ -39,13 +42,6 @@ class Object3d {
     this._worldMatrix = Matrix.I(4);
     this._mvMatrix = Matrix.I(4);
     this._normalMatrix = Matrix.I(4);
-
-    this.position = {
-      x: 0, y: 0, z: 0
-    }
-    this.rotation = {
-      x: 0, y: 0, z: 0
-    }
   }
 
   _updateMatrices () {
@@ -76,39 +72,12 @@ class Object3d {
     this.children.push(object);
   }
 
+  // @override
   _flagForUpdate () {
     this._needsUpdate = true;
     this.children.forEach(function (o) {
       o._flagForUpdate();
     });
-  }
-  moveTo (x,y,z) {
-    this.position = {
-      x: x, y: y, z: z
-    }
-    this._flagForUpdate();
-  }
-  moveBy (x,y,z) {
-    this.position = {
-      x: this.position.x + x,
-      y: this.position.y + y,
-      z: this.position.z + z
-    }
-    this._flagForUpdate();
-  }
-  rotateTo (x,y,z) {
-    this.rotation = {
-      x: x, y: y, z: z
-    }
-    this._flagForUpdate();
-  }
-  rotateBy (x,y,z) {
-    this.rotation = {
-      x: this.rotation.x + x,
-      y: this.rotation.y + y,
-      z: this.rotation.z + z
-    }
-    this._flagForUpdate();
   }
 }
 

@@ -43,13 +43,15 @@ function visualTest () {
   let obj2 = new Object3d(
     new Cylinder(1,3,12,2)
   );
-  obj2.moveBy(0,-2,3);
+  obj2.moveBy(1,-2,8);
   let obj3 = new Object3d(
     new Cylinder(.1,.1,4)
   );
-  obj3.moveTo(-2,0,-6);
+  obj3.moveTo(-2,0,-4);
   let cam = new PerspectiveCamera(30, 1, .5, 15);
-  cam.moveTo(0,0,-20);
+  cam.moveTo(0,2,-20);
+  cam.lookAt(0,0,0)
+  cam.rotateTo(0,0,0);
   scene.addObject(obj);
   scene.addObject(obj2);
   scene.addObject(obj3);
@@ -59,7 +61,8 @@ function visualTest () {
   (function loop () {
     obj.rotateBy(Math.PI / 180,0,0);
     camAngle += Math.PI / 360;
-    cam.moveTo(Math.cos(camAngle) * -20, 0, Math.sin(camAngle) * -20);
+    cam.moveTo(Math.cos(camAngle) * -20, 2, Math.sin(camAngle) * -20);
+    // cam.moveBy(0, .01, 0);
     scene.draw();
     requestAnimationFrame(loop);
   })();

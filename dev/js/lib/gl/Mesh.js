@@ -1,7 +1,6 @@
 /**
  * Mesh class
  */
-
 class Mesh {
   constructor (vertexArray, elementArray, normalArray, uvArray) {
     this.vertices = vertexArray || [];

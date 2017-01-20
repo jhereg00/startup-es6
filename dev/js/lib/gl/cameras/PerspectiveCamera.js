@@ -7,21 +7,12 @@
 const Vector = require('lib/math/Vector');
 const Matrix = require('lib/math/Matrix');
 const Frustrum = require('lib/math/Frustrum');
+const Positionable = require('lib/gl/Positionable');
 
-class PerspectiveCamera {
+class PerspectiveCamera extends Positionable {
   constructor (fieldOfViewY = 45, aspectRatio = 1, zNear = 1, zFar = 10) {
-    this.rotation = 0;
+    super();
     this._projectionMatrix = Matrix.I(4);
-    this.position = {
-      x: 0,
-      y: 0,
-      z: 0
-    }
-    this.target = {
-      x: 0,
-      y: 0,
-      z: 0
-    }
     this.fieldOfViewY = fieldOfViewY;
     this.aspectRatio = aspectRatio;
     this.zNear = zNear;
@@ -41,14 +32,25 @@ class PerspectiveCamera {
 
   _updateMatrix () {
     // determine our zAxis
-    let zAxisV = new Vector([
-      this.target.x - this.position.x,
-      this.target.y - this.position.y,
-      this.target.z - this.position.z
-    ]).normalize().multiply(-1);
+    let zAxisV;
+    if (this.target) {
+      zAxisV = new Vector([
+        this.target.x - this.position.x,
+        this.target.y - this.position.y,
+        this.target.z - this.position.z
+      ]).normalize().multiply(-1);
+    }
+    else {
+      // extra math is to make rotation 0,0,0 point towards positive z
+      zAxisV = new Vector([
+        Math.cos(this.rotation.y + (Math.PI / 2)),
+        Math.sin(this.rotation.x),
+        Math.sin(this.rotation.y + (Math.PI / 2))
+      ]).normalize().multiply(-1);
+    }
 
 		// cross with up to determine x
-		let xAxisV = new Vector([Math.sin(this.rotation), Math.cos(this.rotation), 0]).cross(zAxisV).normalize();
+		let xAxisV = new Vector([Math.sin(this.rotation.z), Math.cos(this.rotation.z), 0]).cross(zAxisV).normalize();
 		// cross z and x to get y
 		let yAxisV = zAxisV.cross(xAxisV).normalize().multiply(-1);
 
@@ -69,31 +71,6 @@ class PerspectiveCamera {
 		this._projectionMatrix = this.positionMatrix.multiply(this.perspectiveMatrix);
     this._inverseMatrix = this._projectionMatrix.inverse();
   }
-  _flagForUpdate () {
-    this._needsUpdate = true;
-  }
-  moveTo (x,y,z) {
-    this.position = {
-      x: x, y: y, z: z
-    }
-    this._flagForUpdate();
-  }
-  moveBy (x,y,z) {
-    this.position = {
-      x: this.position.x + x,
-      y: this.position.y + y,
-      z: this.position.z + z
-    }
-    this._flagForUpdate();
-  }
-  rotateTo (x) {
-    this.rotation = x
-    this._flagForUpdate();
-  }
-  rotateBy (x) {
-    this.rotation = this.rotation + x;
-    this._flagForUpdate();
-  }
   lookAt (x,y,z) {
     this.target = {
       x: x,
@@ -101,6 +78,7 @@ class PerspectiveCamera {
       z: z
     }
     this._flagForUpdate();
+    return this;
   }
 }
 
