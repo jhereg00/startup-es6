@@ -148,13 +148,19 @@ class GLProgram {
   }
 
   static getBy (...args) {
-    createdPrograms.forEach(function (p) {
+    let definitionsString = "";
+    for (let prop in args[4] || {}) {
+      definitionsString += prop + "=" + args[4][prop] + "&";
+    }
+    let compareString = args.slice(1,4).join(';') + ';' + definitionsString;
+    for (let i = 0, len = createdPrograms.length; i < len; i++) {
+      let p = createdPrograms[i];
       if (p.gl === args[0] &&
-          p._passedArguments === args.slice(1).join(';')
+          p._passedArguments === compareString
         ) {
         return p;
       }
-    });
+    };
     return new GLProgram (args[0], args[1], args[2], args[3], args[4]);
   }
   static getActive (gl) {

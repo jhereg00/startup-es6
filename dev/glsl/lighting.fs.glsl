@@ -1,7 +1,6 @@
 // basic 2d output
 precision mediump float;
 
-#define NUM_LIGHTS 3
 #define AMBIENT 0
 #define POINT 1
 #define DIRECTIONAL 2
@@ -49,9 +48,9 @@ void main () {
       // formula for intensity at distance
       // intensity / ((distance / radius + 1) ^ 2)
       float dist = distance(light.position, position);
-      float attenuation = pow((((dist - light.falloffStart) / (light.radius - light.falloffStart))), 2.0);
-      float diffuseAttenuation = light.diffuseIntensity / max(attenuation,1.0);
-      float specularAttenuation = light.specularIntensity / max(attenuation,1.0);
+      float attenuation = 1.0 - (max(dist - light.falloffStart, 0.0) / (light.radius - light.falloffStart));
+      float diffuseAttenuation = light.diffuseIntensity * min(attenuation,1.0);
+      float specularAttenuation = light.specularIntensity * min(attenuation,1.0);
 
       // determine the diffuse
       // it's the dot product of the light direction and the normal
@@ -66,7 +65,7 @@ void main () {
 
       // lighting = textureCube(uShadowCube, lightDir * vec3(1.0,1.0,-1.0)).rgb;
       // lighting = normalize(position - light.position);
-      if ((textureCube(uShadowCubes[i], lightDir * vec3(1.0,1.0,-1.0)).r + .025) > dist / light.radius) {
+      if (diffuse > 0.0 && (textureCube(uShadowCubes[i], lightDir * vec3(1.0,1.0,-1.0)).r + .05) > dist / light.radius) {
         // lighting += vec3(1.0);
         lighting += light.diffuseColor.rgb * light.diffuseColor.a * (diffuseAttenuation * diffuse) * materialColor.rgb +
                     light.specularColor.rgb * light.specularColor.a * specular * specularAttenuation;

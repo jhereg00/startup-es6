@@ -50,11 +50,11 @@ function visualTest () {
     new Cylinder(.1,.1,4)
   );
   obj3.moveTo(-.5,0,-6);
-  let light = new Light(Light.POINT, new Color(40,40,60), new Color(255,255,255), new Color(220,220,255,.5), 18, 8);
+  let light = new Light(Light.POINT, new Color(40,40,60), new Color(255,255,255), new Color(220,220,255,.5), 18, 12);
   light.moveTo(-2,2,-8);
   let light2 = new Light(Light.POINT, new Color(0,0,0,0), new Color(80,120,200,.3), new Color(0,0,0,0), 20, 18);
   light2.moveTo(5,0,18);
-  let light3 = new Light(Light.POINT, new Color(0,0,0,0), new Color(200,0,0,1), new Color(255,0,0,1), 10, 0);
+  let light3 = new Light(Light.POINT, new Color(0,0,0,0), new Color(200,0,0,1), new Color(0,0,255,1), 10, 0);
   light3.specularIntensity = 5;
   light3.moveTo(0,0,5);
 
@@ -75,6 +75,7 @@ function visualTest () {
   // scene.setActiveCamera(light.shadowCameras.zPositive);
   // console.log(cam, cam.projectionMatrix.inspect(), cam.positionMatrix.inspect(), cam.perspectiveMatrix.inspect());
   let camAngle = 0;
+  let lastLog = new Date().getTime();
   let lastTime = new Date().getTime();
   (function loop () {
     let now = new Date().getTime();
@@ -87,7 +88,10 @@ function visualTest () {
     //cam.rotateBy(0,Math.PI / 360,0);
     scene.draw();
 
-    //console.log(1000 / (now - lastTime) + ' fps');
+    if (now - lastLog > 5000) {
+      console.log (1000 / (now - lastTime));
+      lastLog = now;
+    }
     lastTime = now;
     requestAnimationFrame(loop);
   })();

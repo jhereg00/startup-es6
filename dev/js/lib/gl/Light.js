@@ -6,7 +6,7 @@ const Positionable = require('lib/gl/Positionable');
 const PerspectiveCamera = require('lib/gl/cameras/PerspectiveCamera');
 const GLProgram = require('lib/gl/GLProgram');
 
-const RESOLUTION = 4096;
+const RESOLUTION = 2048;
 
 class Light extends Positionable {
   constructor (type, ambientColor, diffuseColor, specularColor, radius, falloffStart) {
@@ -38,14 +38,7 @@ class Light extends Positionable {
     }
   }
 
-  drawShadowMap (gl, objectList, buffers) {
-    let program = GLProgram.getBy(
-      gl,
-      ['/glsl/depth.vs.glsl','/glsl/depth.fs.glsl'],
-      ['aPosition'],
-      ['uMVMatrix','uProjectionMatrix','uColor','uCamPos','uCamRange'],
-      null
-    );
+  drawShadowMap (gl, program, objectList, buffers) {
     if (!program.ready) {
       return false;
     }
@@ -79,6 +72,8 @@ class Light extends Positionable {
         gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.texture);
         gl.viewport(0,0,RESOLUTION,RESOLUTION);
 	      gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this.renderbuffer);
+        // gl.clearColor(1.0,1.0,1.0,1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
         gl.uniform3fv(program.u.uCamPos, new Float32Array([this.position.x, this.position.y, this.position.z]));
         gl.uniform1f(program.u.uCamRange, this.radius);
@@ -87,12 +82,11 @@ class Light extends Positionable {
           gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, target, this.texture, 0);
           gl.uniformMatrix4fv(program.u.uProjectionMatrix, false, this.shadowCameras[cam].projectionMatrix.flatten());
 
-          gl.clearColor(1.0,1.0,1.0,1.0);
-          gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+          // gl.clearColor(1.0,1.0,1.0,1.0);
+          // gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
           objectList.forEach(function (o) {
             gl.uniformMatrix4fv(program.u.uMVMatrix, false, o.mvMatrix.flatten());
-            gl.uniform3fv(program.u.uColor, new Float32Array([.5,.8,.9]));
             buffers.aPosition.bindData(program.a.aPosition, o.mesh.vertices);
             buffers.elements.bindData(o.mesh.elements);
             gl.drawElements(gl.TRIANGLES, o.mesh.elements.length, gl.UNSIGNED_SHORT, 0);

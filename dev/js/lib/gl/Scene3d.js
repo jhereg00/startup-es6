@@ -57,12 +57,12 @@ class Scene3d extends GLScene {
     // only define the output programs here
     // the gBuffer programs are defined by the addition of objects
     this.programs = {
-      lighting: new GLProgram(
-        this.gl,
-        ['/glsl/out.vs.glsl','/glsl/lighting.fs.glsl'],
-        ['aPosition','aUV'],
-        ['uNormalTexture','uPositionTexture','uColorTexture','uLights','uNumLights','uCameraPosition','uShadowCube']
-      ),
+      // lighting: new GLProgram(
+      //   this.gl,
+      //   ['/glsl/out.vs.glsl','/glsl/lighting.fs.glsl'],
+      //   ['aPosition','aUV'],
+      //   ['uNormalTexture','uPositionTexture','uColorTexture','uLights','uNumLights','uCameraPosition','uShadowCube']
+      // ),
       compile: new GLProgram(
         this.gl,
         ['/glsl/out.vs.glsl','/glsl/compile.fs.glsl'],
@@ -74,8 +74,22 @@ class Scene3d extends GLScene {
         ['/glsl/out.vs.glsl','/glsl/out.fs.glsl'],
         ['aPosition','aUV'],
         null
+      ),
+      depth: new GLProgram(
+        this.gl,
+        ['/glsl/depth.vs.glsl','/glsl/depth.fs.glsl'],
+        ['aPosition'],
+        ['uMVMatrix','uProjectionMatrix','uCamPos','uCamRange'],
+        null
       )
     };
+    this.dynamicProgramSettings = {
+      lighting: [
+        ['/glsl/out.vs.glsl','/glsl/lighting.fs.glsl'],
+        ['aPosition','aUV'],
+        ['uNormalTexture','uPositionTexture','uColorTexture','uLights','uNumLights','uCameraPosition','uShadowCube']
+      ]
+    }
     this._materialPrograms = {};
   }
   initializeBuffers () {
@@ -124,21 +138,30 @@ class Scene3d extends GLScene {
     }
   }
   _drawLighting () {
-    if (!this.programs.lighting.ready)
-      return false;
-
     // update shadowmaps
-    if (!this.lights.every((l) => l.drawShadowMap(this.gl, this.objects, this.buffers)))
+    let program = this.programs.depth;
+    if (!this.lights.every((l) => l.drawShadowMap(this.gl, program, this.objects, this.buffers)))
       return false;
 
-    this.programs.lighting.use();
+    program = GLProgram.getBy(
+      this.gl,
+      this.dynamicProgramSettings.lighting[0],
+      this.dynamicProgramSettings.lighting[1],
+      this.dynamicProgramSettings.lighting[2],
+      {
+        NUM_LIGHTS: Math.min(this.lights.length,12)
+      }
+    )
+    if (!program.ready)
+      return false;
+    program.use();
     this.framebuffers.lightingBuffer.use();
     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
     this.buffers.elements.bindData([0,1,2,0,2,3]);
-    this.buffers.aPositionOut.bindData(this.programs.lighting.a.aPosition, [-1,-1,1,-1,1,1,-1,1]);
-    this.buffers.aUV.bindData(this.programs.lighting.a.aUV, [0,0,1,0,1,1,0,1]);
+    this.buffers.aPositionOut.bindData(program.a.aPosition, [-1,-1,1,-1,1,1,-1,1]);
+    this.buffers.aUV.bindData(program.a.aUV, [0,0,1,0,1,1,0,1]);
 
-    let p = this.programs.lighting;
+    let p = program;
     for (let i = 0, len = this.lights.length; i < len; i++) {
       // shadow cubes
       this.gl.activeTexture(this.gl['TEXTURE' + (i + 3)]);
@@ -162,15 +185,15 @@ class Scene3d extends GLScene {
 
     this.gl.activeTexture(this.gl.TEXTURE0);
     this.framebuffers.gBuffer.normalTexture.bind();
-    this.gl.uniform1i(this.programs.lighting.u.uNormalTexture, 0);
+    this.gl.uniform1i(program.u.uNormalTexture, 0);
     this.gl.activeTexture(this.gl.TEXTURE1);
     this.framebuffers.gBuffer.positionTexture.bind();
-    this.gl.uniform1i(this.programs.lighting.u.uPositionTexture, 1);
+    this.gl.uniform1i(program.u.uPositionTexture, 1);
     this.gl.activeTexture(this.gl.TEXTURE2);
     this.framebuffers.gBuffer.colorTexture.bind();
-    this.gl.uniform1i(this.programs.lighting.u.uColorTexture, 2);
+    this.gl.uniform1i(program.u.uColorTexture, 2);
 
-    this.gl.uniform3fv(this.programs.lighting.u.uCameraPosition, new Float32Array([this.activeCamera.position.x, this.activeCamera.position.y, this.activeCamera.position.z]));
+    this.gl.uniform3fv(program.u.uCameraPosition, new Float32Array([this.activeCamera.position.x, this.activeCamera.position.y, this.activeCamera.position.z]));
 
     this.gl.drawElements(this.gl.TRIANGLES, 6, this.gl.UNSIGNED_SHORT, 0);
   }
@@ -209,18 +232,18 @@ class Scene3d extends GLScene {
     this.buffers.aUV.bindData(this.programs.out.a.aUV, [1,1,0,1,0,0,1,0]);
 
     this.gl.activeTexture(this.gl.TEXTURE0);
-    this.framebuffers.gBuffer.colorTexture.bind();
-    this.gl.uniform1i(this.programs.out.u.uColorTexture, 0);
-    this.gl.drawElements(this.gl.TRIANGLES, 6, this.gl.UNSIGNED_SHORT, 0);
-
-    this.buffers.aPositionOut.bindData(this.programs.out.a.aPosition, [0,1,1,1,1,0,0,0]);
-    this.framebuffers.gBuffer.normalTexture.bind();
-    this.gl.drawElements(this.gl.TRIANGLES, 6, this.gl.UNSIGNED_SHORT, 0);
-
-    this.buffers.aPositionOut.bindData(this.programs.out.a.aPosition, [-1,0,0,0,0,-1,-1,-1]);
-    this.framebuffers.gBuffer.depthRGBTexture.bind();
-    // this.gl.bindTexture(this.gl.TEXTURE_CUBE_MAP_POSITIVE_Z, this.lights[0].texture);
-    this.gl.drawElements(this.gl.TRIANGLES, 6, this.gl.UNSIGNED_SHORT, 0);
+    // this.framebuffers.gBuffer.colorTexture.bind();
+    // this.gl.uniform1i(this.programs.out.u.uColorTexture, 0);
+    // this.gl.drawElements(this.gl.TRIANGLES, 6, this.gl.UNSIGNED_SHORT, 0);
+    //
+    // this.buffers.aPositionOut.bindData(this.programs.out.a.aPosition, [0,1,1,1,1,0,0,0]);
+    // this.framebuffers.gBuffer.normalTexture.bind();
+    // this.gl.drawElements(this.gl.TRIANGLES, 6, this.gl.UNSIGNED_SHORT, 0);
+    //
+    // this.buffers.aPositionOut.bindData(this.programs.out.a.aPosition, [-1,0,0,0,0,-1,-1,-1]);
+    // this.framebuffers.gBuffer.depthRGBTexture.bind();
+    // // this.gl.bindTexture(this.gl.TEXTURE_CUBE_MAP_POSITIVE_Z, this.lights[0].texture);
+    // this.gl.drawElements(this.gl.TRIANGLES, 6, this.gl.UNSIGNED_SHORT, 0);
 
     this.buffers.aPositionOut.bindData(this.programs.out.a.aPosition, [0,0,1,0,1,-1,0,-1]);
     this.framebuffers.lightingBuffer.texture.bind();
