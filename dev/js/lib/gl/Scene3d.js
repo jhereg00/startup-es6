@@ -41,6 +41,7 @@ class Scene3d extends GLScene {
   constructor (...args) {
     super(...args);
     this.objects = [];
+    this.lights = [];
     // enable drawbuffers
     this.drawBuffersExtension = this.gl.getExtension('WEBGL_draw_buffers');
     if (!this.drawBuffersExtension) {
@@ -60,7 +61,7 @@ class Scene3d extends GLScene {
         this.gl,
         ['/glsl/out.vs.glsl','/glsl/lighting.fs.glsl'],
         ['aPosition','aUV'],
-        ['uNormalTexture','uPositionTexture','uColorTexture','uLights','uNumLights','uCameraPosition']
+        ['uNormalTexture','uPositionTexture','uColorTexture','uLights','uNumLights','uCameraPosition','uShadowCube']
       ),
       compile: new GLProgram(
         this.gl,
@@ -125,6 +126,11 @@ class Scene3d extends GLScene {
   _drawLighting () {
     if (!this.programs.lighting.ready)
       return false;
+
+    // update shadowmaps
+    if (!this.lights.every((l) => l.drawShadowMap(this.gl, this.objects, this.buffers)))
+      return false;
+
     this.programs.lighting.use();
     this.framebuffers.lightingBuffer.use();
     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
@@ -132,41 +138,27 @@ class Scene3d extends GLScene {
     this.buffers.aPositionOut.bindData(this.programs.lighting.a.aPosition, [-1,-1,1,-1,1,1,-1,1]);
     this.buffers.aUV.bindData(this.programs.lighting.a.aUV, [0,0,1,0,1,1,0,1]);
 
-    // big ol' temp
-    let positionLoc = this.programs.lighting.getStructPosition('uLights',0,'position');
-    let colorLoc = this.programs.lighting.getStructPosition('uLights',0,'color');
-    let specularColorLoc = this.programs.lighting.getStructPosition('uLights',0,'specularColor');
-    let radiusLoc = this.programs.lighting.getStructPosition('uLights',0,'radius');
-    let intensityLoc = this.programs.lighting.getStructPosition('uLights',0,'intensity');
-    let ambienceLoc = this.programs.lighting.getStructPosition('uLights',0,'ambience');
-    this.gl.uniform3fv(positionLoc, new Float32Array([-2.0,0.0,-6.0]));
-    this.gl.uniform3fv(colorLoc, new Float32Array([1,0,0]));
-    this.gl.uniform3fv(specularColorLoc, new Float32Array([1,.7,.7]));
-    this.gl.uniform1f(radiusLoc, 25);
-    this.gl.uniform1f(intensityLoc, 1.1);
-    this.gl.uniform1f(ambienceLoc, 0);
+    let p = this.programs.lighting;
+    for (let i = 0, len = this.lights.length; i < len; i++) {
+      // shadow cubes
+      this.gl.activeTexture(this.gl['TEXTURE' + (i + 3)]);
+      this.gl.bindTexture(this.gl.TEXTURE_CUBE_MAP, this.lights[i].texture);
+      this.gl.uniform1i( p.getStructPosition('uLights',i,'shadowCube'), i + 1 );
+      // this.gl.uniform1i( p.getArrayPosition('uShadowCubes',i + 1), i + 3);
+      this.gl.uniform1i( p.u.uShadowCube, i + 3 );
 
-    positionLoc = this.programs.lighting.getStructPosition('uLights',1,'position');
-    colorLoc = this.programs.lighting.getStructPosition('uLights',1,'color');
-    radiusLoc = this.programs.lighting.getStructPosition('uLights',1,'radius');
-    intensityLoc = this.programs.lighting.getStructPosition('uLights',1,'intensity');
-    ambienceLoc = this.programs.lighting.getStructPosition('uLights',1,'ambience');
-    this.gl.uniform3fv(colorLoc, new Float32Array([.2,.2,.4]));
-    this.gl.uniform1f(ambienceLoc, 1);
+      this.gl.uniform3fv(  p.getStructPosition('uLights',i,'position'),          this.lights[i].positionArray                    );
+      this.gl.uniform4fv(  p.getStructPosition('uLights',i,'diffuseColor'),      this.lights[i].diffuseColor.toFloatArray()      );
+      this.gl.uniform4fv(  p.getStructPosition('uLights',i,'ambientColor'),      this.lights[i].ambientColor.toFloatArray()      );
+      this.gl.uniform4fv(  p.getStructPosition('uLights',i,'specularColor'),     this.lights[i].specularColor.toFloatArray()     );
+      this.gl.uniform1f(   p.getStructPosition('uLights',i,'diffuseIntensity'),  this.lights[i].diffuseIntensity                 );
+      this.gl.uniform1f(   p.getStructPosition('uLights',i,'ambientIntensity'),  this.lights[i].ambientIntensity                 );
+      this.gl.uniform1f(   p.getStructPosition('uLights',i,'specularIntensity'), this.lights[i].specularIntensity                );
+      this.gl.uniform1f(   p.getStructPosition('uLights',i,'radius'),            this.lights[i].radius                           );
+      this.gl.uniform1f(   p.getStructPosition('uLights',i,'falloffStart'),      this.lights[i].falloffStart                     );
+    }
 
-    positionLoc = this.programs.lighting.getStructPosition('uLights',2,'position');
-    colorLoc = this.programs.lighting.getStructPosition('uLights',2,'color');
-    specularColorLoc = this.programs.lighting.getStructPosition('uLights',2,'specularColor');
-    radiusLoc = this.programs.lighting.getStructPosition('uLights',2,'radius');
-    intensityLoc = this.programs.lighting.getStructPosition('uLights',2,'intensity');
-    ambienceLoc = this.programs.lighting.getStructPosition('uLights',2,'ambience');
-    this.gl.uniform3fv(positionLoc, new Float32Array([5.0,0.0,1.0]));
-    this.gl.uniform3fv(colorLoc, new Float32Array([0,.5,1.0]));
-    this.gl.uniform3fv(specularColorLoc, new Float32Array([0,.8,1]));
-    this.gl.uniform1f(radiusLoc, 50);
-    this.gl.uniform1f(intensityLoc, .2);
-
-    this.gl.uniform1i(this.programs.lighting.u.uNumLights, 3);
+    this.gl.uniform1i(p.u.uNumLights, this.lights.length);
 
     this.gl.activeTexture(this.gl.TEXTURE0);
     this.framebuffers.gBuffer.normalTexture.bind();
@@ -227,6 +219,7 @@ class Scene3d extends GLScene {
 
     this.buffers.aPositionOut.bindData(this.programs.out.a.aPosition, [-1,0,0,0,0,-1,-1,-1]);
     this.framebuffers.gBuffer.depthRGBTexture.bind();
+    // this.gl.bindTexture(this.gl.TEXTURE_CUBE_MAP_POSITIVE_Z, this.lights[0].texture);
     this.gl.drawElements(this.gl.TRIANGLES, 6, this.gl.UNSIGNED_SHORT, 0);
 
     this.buffers.aPositionOut.bindData(this.programs.out.a.aPosition, [0,0,1,0,1,-1,0,-1]);
@@ -277,6 +270,10 @@ class Scene3d extends GLScene {
     return {
       COLOR_TEXTURE: material && material.texture ? 1 : 0
     }
+  }
+
+  addLight (light) {
+    this.lights.push(light);
   }
 
   setActiveCamera (camera) {

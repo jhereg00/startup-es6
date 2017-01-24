@@ -42,15 +42,21 @@ class PerspectiveCamera extends Positionable {
     }
     else {
       // extra math is to make rotation 0,0,0 point towards positive z
+      // console.log(this.rotation.y * (180 / Math.PI) % 360);
       zAxisV = new Vector([
         Math.cos(this.rotation.y + (Math.PI / 2)),
         Math.sin(this.rotation.x),
-        Math.sin(this.rotation.y + (Math.PI / 2))
+        -1 + Math.cos(this.rotation.y) + Math.cos(this.rotation.x)
       ]).normalize().multiply(-1);
+
+      // console.log(zAxisV.inspect(), Math.sin(this.rotation.x), 1 - Math.cos(this.rotation.y + (Math.PI / 2)) - Math.sin(this.rotation.x));
     }
 
 		// cross with up to determine x
 		let xAxisV = new Vector([Math.sin(this.rotation.z), Math.cos(this.rotation.z), 0]).cross(zAxisV).normalize();
+    if (xAxisV.eql(new Vector([0,0,0]))) {
+      xAxisV = new Vector([1,0,0]);
+    }
 		// cross z and x to get y
 		let yAxisV = zAxisV.cross(xAxisV).normalize().multiply(-1);
 
