@@ -6,7 +6,7 @@ const Positionable = require('lib/gl/Positionable');
 const PerspectiveCamera = require('lib/gl/cameras/PerspectiveCamera');
 const GLProgram = require('lib/gl/GLProgram');
 
-const RESOLUTION = 2048;
+const RESOLUTION = 4096;
 
 class Light extends Positionable {
   constructor (type, ambientColor, diffuseColor, specularColor, radius, falloffStart) {

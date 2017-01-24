@@ -143,9 +143,9 @@ class Scene3d extends GLScene {
       // shadow cubes
       this.gl.activeTexture(this.gl['TEXTURE' + (i + 3)]);
       this.gl.bindTexture(this.gl.TEXTURE_CUBE_MAP, this.lights[i].texture);
-      this.gl.uniform1i( p.getStructPosition('uLights',i,'shadowCube'), i + 1 );
-      // this.gl.uniform1i( p.getArrayPosition('uShadowCubes',i + 1), i + 3);
-      this.gl.uniform1i( p.u.uShadowCube, i + 3 );
+      // this.gl.uniform1i( p.getStructPosition('uLights',i,'shadowCube'), i + 1 );
+      this.gl.uniform1i( p.getArrayPosition('uShadowCubes',i ), i + 3);
+      // this.gl.uniform1i( p.u.uShadowCube, i + 3 );
 
       this.gl.uniform3fv(  p.getStructPosition('uLights',i,'position'),          this.lights[i].positionArray                    );
       this.gl.uniform4fv(  p.getStructPosition('uLights',i,'diffuseColor'),      this.lights[i].diffuseColor.toFloatArray()      );
@@ -229,6 +229,7 @@ class Scene3d extends GLScene {
   draw () {
     // first, let's draw our g-buffer
     this.framebuffers.gBuffer.use();
+    this.gl.clearColor(this.backgroundColor.r, this.backgroundColor.g, this.backgroundColor.b, 1.0);
     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
     this._drawObjects();
     this._drawLighting();
