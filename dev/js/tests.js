@@ -65,9 +65,10 @@ function visualTest () {
   // cam.rotateTo(0,0,0);
   cam.rotateTo(0,0,0);
 
+  obj.addObject(obj3);
+
   scene.addObject(obj);
   scene.addObject(obj2);
-  scene.addObject(obj3);
   scene.addLight(light);
   scene.addLight(light2);
   scene.addLight(light3);
@@ -83,7 +84,7 @@ function visualTest () {
     camAngle += Math.PI / 360;
     cam.moveTo(Math.cos(camAngle) * -20, 2, Math.sin(camAngle) * -20);
     light.moveTo(Math.sin(camAngle * 4) * 4, -.5, -8);
-    obj3.moveTo(Math.sin(camAngle * 4) * 4, -.5, -8);
+    // obj3.moveTo(Math.sin(camAngle * 4) * 4, -.5, -8);
     // cam.moveBy(0, .01, 0);
     //cam.rotateBy(0,Math.PI / 360,0);
     scene.draw();

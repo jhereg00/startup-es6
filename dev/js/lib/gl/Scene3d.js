@@ -245,7 +245,8 @@ class Scene3d extends GLScene {
     // // this.gl.bindTexture(this.gl.TEXTURE_CUBE_MAP_POSITIVE_Z, this.lights[0].texture);
     // this.gl.drawElements(this.gl.TRIANGLES, 6, this.gl.UNSIGNED_SHORT, 0);
 
-    this.buffers.aPositionOut.bindData(this.programs.out.a.aPosition, [0,0,1,0,1,-1,0,-1]);
+    // this.buffers.aPositionOut.bindData(this.programs.out.a.aPosition, [0,0,1,0,1,-1,0,-1]);
+    this.buffers.aPositionOut.bindData(this.programs.out.a.aPosition, [-1,1,1,1,1,-1,-1,-1]);
     this.framebuffers.lightingBuffer.texture.bind();
     this.gl.drawElements(this.gl.TRIANGLES, 6, this.gl.UNSIGNED_SHORT, 0);
   }

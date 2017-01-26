@@ -49,7 +49,7 @@ class Object3d extends Positionable {
     this._modelMatrix = Matrix.rotation3d(this.rotation.x, this.rotation.y, this.rotation.z);
     this._mvMatrix = this._worldMatrix.multiply(this._modelMatrix);
     if (this.parent)
-      this._mvMatrix = this.parent.mvMatrix.multiply(this._mvMatrix);
+      this._mvMatrix = this._mvMatrix.multiply(this.parent.mvMatrix);
     this._normalMatrix = this._mvMatrix.inverse().transpose();
   }
   get mvMatrix () {
