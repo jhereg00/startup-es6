@@ -17,6 +17,7 @@ uniform struct Light {
 
   float radius;
   float falloffStart;
+  float bias;
 } uLights [NUM_LIGHTS];
 
 uniform sampler2D uNormalTexture;
@@ -40,6 +41,7 @@ void main () {
   float specularity = 1.0;
 
   vec3 lighting = vec3(0.0);
+  vec3 specOut = vec3(0.0);
 
   for( int i = 0; i < NUM_LIGHTS; i++ ) {
     Light light = uLights[i];
@@ -65,13 +67,13 @@ void main () {
 
       // lighting = textureCube(uShadowCube, lightDir * vec3(1.0,1.0,-1.0)).rgb;
       // lighting = normalize(position - light.position);
-      if (diffuse > 0.0 && (textureCube(uShadowCubes[i], lightDir * vec3(1.0,1.0,-1.0)).r + .05) > dist / light.radius) {
+      if (diffuse > 0.0 && (textureCube(uShadowCubes[i], lightDir * vec3(1.0,1.0,-1.0)).r + light.bias) > dist / light.radius) {
         // lighting += vec3(1.0);
-        lighting += light.diffuseColor.rgb * light.diffuseColor.a * (diffuseAttenuation * diffuse) * materialColor.rgb +
-                    light.specularColor.rgb * light.specularColor.a * specular * specularAttenuation;
+        lighting += light.diffuseColor.rgb * light.diffuseColor.a * (diffuseAttenuation * diffuse) * materialColor.rgb;
+        specOut += light.specularColor.rgb * light.specularColor.a * specular * specularAttenuation;
       }
     }
   }
 
-  gl_FragColor = vec4(lighting, 1.0);
+  gl_FragColor = vec4(lighting + specOut, 1.0);
 }

@@ -179,6 +179,7 @@ class Scene3d extends GLScene {
       this.gl.uniform1f(   p.getStructPosition('uLights',i,'specularIntensity'), this.lights[i].specularIntensity                );
       this.gl.uniform1f(   p.getStructPosition('uLights',i,'radius'),            this.lights[i].radius                           );
       this.gl.uniform1f(   p.getStructPosition('uLights',i,'falloffStart'),      this.lights[i].falloffStart                     );
+      this.gl.uniform1f(   p.getStructPosition('uLights',i,'bias'),               this.lights[i].bias                            );
     }
 
     this.gl.uniform1i(p.u.uNumLights, this.lights.length);

@@ -49,26 +49,26 @@ function visualTest () {
   let obj3 = new Object3d(
     new Cylinder(.1,.1,4)
   );
-  obj3.moveTo(-.5,0,-6);
+  obj3.moveTo(0,0,5);
   let light = new Light(Light.POINT, new Color(40,40,60), new Color(255,255,255), new Color(220,220,255,.5), 18, 12);
   light.moveTo(-2,2,-8);
+  light.bias = .1;
   let light2 = new Light(Light.POINT, new Color(0,0,0,0), new Color(80,120,200,.3), new Color(0,0,0,0), 20, 18);
   light2.moveTo(5,0,18);
   let light3 = new Light(Light.POINT, new Color(0,0,0,0), new Color(200,0,0,1), new Color(0,0,255,1), 10, 0);
   light3.specularIntensity = 5;
   light3.moveTo(0,0,5);
 
-  let cam = new PerspectiveCamera(30, 1, .5, 25);
-  cam.moveTo(0,0,-20);
+  let cam = new PerspectiveCamera(45, 1, .5, 25);
+  cam.moveTo(0,0,5);
   //cam.moveTo(0,2,-20);
   cam.lookAt(0,0,0)
   // cam.rotateTo(0,0,0);
   cam.rotateTo(0,0,0);
 
-  obj.addObject(obj3);
-
   scene.addObject(obj);
   scene.addObject(obj2);
+  scene.addObject(obj3);
   scene.addLight(light);
   scene.addLight(light2);
   scene.addLight(light3);
@@ -83,7 +83,7 @@ function visualTest () {
     obj.rotateBy(Math.PI / 180,0,0);
     camAngle += Math.PI / 360;
     cam.moveTo(Math.cos(camAngle) * -20, 2, Math.sin(camAngle) * -20);
-    light.moveTo(Math.sin(camAngle * 4) * 4, -.5, -8);
+    // light.moveTo(Math.sin(camAngle * 4) * 4, -.5, -8);
     // obj3.moveTo(Math.sin(camAngle * 4) * 4, -.5, -8);
     // cam.moveBy(0, .01, 0);
     //cam.rotateBy(0,Math.PI / 360,0);

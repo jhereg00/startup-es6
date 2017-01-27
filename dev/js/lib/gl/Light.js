@@ -20,6 +20,7 @@ class Light extends Positionable {
     this.specularIntensity = 1;
     this.radius = radius || 1;
     this.falloffStart = falloffStart || 0;
+    this.bias = .05;
 
     this.type = type;
 
@@ -84,6 +85,7 @@ class Light extends Positionable {
 
           // gl.clearColor(1.0,1.0,1.0,1.0);
           // gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+          gl.clear(gl.DEPTH_BUFFER_BIT);
 
           objectList.forEach(function (o) {
             gl.uniformMatrix4fv(program.u.uMVMatrix, false, o.mvMatrix.flatten());
@@ -99,6 +101,7 @@ class Light extends Positionable {
 
   moveTo (...args) {
     super.moveTo.apply(this, args);
+    console.log(args);
     for (let cam in this.shadowCameras) {
       this.shadowCameras[cam].moveTo.apply(this.shadowCameras[cam],args);
     }
