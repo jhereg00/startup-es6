@@ -101,7 +101,6 @@ class Light extends Positionable {
 
   moveTo (...args) {
     super.moveTo.apply(this, args);
-    console.log(args);
     for (let cam in this.shadowCameras) {
       this.shadowCameras[cam].moveTo.apply(this.shadowCameras[cam],args);
     }
