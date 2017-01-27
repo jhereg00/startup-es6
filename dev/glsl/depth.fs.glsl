@@ -1,5 +1,5 @@
 // our standard 3d fragment shader for building the g-buffer
-precision mediump float;
+precision highp float;
 
 varying float vDepth;
 

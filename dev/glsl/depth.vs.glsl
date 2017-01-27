@@ -1,5 +1,5 @@
 // our standard 3d vertex shader
-precision mediump float;
+precision highp float;
 
 attribute vec3 aPosition;
 
