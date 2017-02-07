@@ -23,6 +23,7 @@ uniform struct Light {
 uniform sampler2D uNormalTexture;
 uniform sampler2D uPositionTexture;
 uniform sampler2D uColorTexture;
+uniform sampler2D uSpecularityTexture;
 uniform vec3 uCameraPosition;
 uniform int uNumLights;
 uniform samplerCube uShadowCubes [NUM_LIGHTS];
@@ -37,8 +38,7 @@ void main () {
   vec3 position = texture2D(uPositionTexture, vTextureCoords).xyz;
   vec3 viewDir = normalize(uCameraPosition - position);
   vec4 materialColor = texture2D(uColorTexture, vTextureCoords);
-  // temp
-  float specularity = 1.0;
+  vec4 materialSpecularity = texture2D(uSpecularityTexture, vTextureCoords);
 
   vec3 lighting = vec3(0.0);
   vec3 specOut = vec3(0.0);
@@ -61,7 +61,7 @@ void main () {
       // do blinn-phong specular highlights
       vec3 halfDir = normalize(lightDir + viewDir);
       float specAngle = max(dot(halfDir, normal), 0.0);
-      float specular = pow(specAngle, shininess) * specularity;
+      float specular = materialSpecularity.r * pow(specAngle, shininess);
 
       lighting += light.ambientColor.rgb * light.ambientColor.a * light.ambientIntensity * materialColor.rgb;
 
@@ -76,4 +76,5 @@ void main () {
   }
 
   gl_FragColor = vec4(lighting + specOut, 1.0);
+  // gl_FragColor = materialColor;
 }

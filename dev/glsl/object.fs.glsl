@@ -2,9 +2,14 @@
 #extension GL_EXT_draw_buffers : require
 precision mediump float;
 
-uniform vec3 uColor;
+uniform vec4 uColor;
 #if COLOR_TEXTURE
 uniform sampler2D uColorTexture;
+#endif
+
+uniform float uSpecularity;
+#if SPECULARITY_TEXTURE
+uniform sampler2D uSpecularityTexture;
 #endif
 
 varying vec4 vPos;
@@ -14,9 +19,9 @@ varying float vDepth;
 void main () {
   // color output
   #if COLOR_TEXTURE
-  gl_FragData[0] = vec4(uColor.brg, 1.0);
+  gl_FragData[0] = uColor.brga;
   #else
-  gl_FragData[0] = vec4(uColor, 1.0);
+  gl_FragData[0] = uColor;
   #endif
 
   // normals
@@ -27,4 +32,7 @@ void main () {
 
   // position
   gl_FragData[3] = vPos;
+
+  // specularity
+  gl_FragData[4] = vec4(vec3(uSpecularity), 1.0);
 }

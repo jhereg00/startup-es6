@@ -28,6 +28,7 @@
  */
 const Matrix = require('lib/math/Matrix');
 const Mesh = require('lib/gl/Mesh');
+const Material = require('lib/gl/Material');
 const Positionable = require('lib/gl/Positionable');
 
 class Object3d extends Positionable {
@@ -35,7 +36,7 @@ class Object3d extends Positionable {
     super();
 
     this.mesh = mesh || new Mesh();
-    this.material = material;
+    this.material = material || new Material();
     this.children = [];
 
     this._modelMatrix = Matrix.I(4);

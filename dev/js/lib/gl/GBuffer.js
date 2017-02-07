@@ -27,6 +27,7 @@ class GBuffer extends GLFramebuffer {
     this.normalTexture = new GLTextureFloat (this.gl, null, this.size, this.size);
     this.depthRGBTexture = new GLTextureFloat (this.gl, null, this.size, this.size);
     this.positionTexture = new GLTextureFloat (this.gl, null, this.size, this.size);
+    this.specularityTexture = new GLTextureFloat (this.gl, null, this.size, this.size);
     this.depthTexture = new GLTextureDepth (this.gl, null, this.size, this.size);
 
     this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.framebuffer);
@@ -35,6 +36,7 @@ class GBuffer extends GLFramebuffer {
     this.gl.framebufferTexture2D(this.gl.FRAMEBUFFER, this.drawBuffersExtension.COLOR_ATTACHMENT1_WEBGL, this.gl.TEXTURE_2D, this.normalTexture.texture, 0);
     this.gl.framebufferTexture2D(this.gl.FRAMEBUFFER, this.drawBuffersExtension.COLOR_ATTACHMENT2_WEBGL, this.gl.TEXTURE_2D, this.depthRGBTexture.texture, 0);
     this.gl.framebufferTexture2D(this.gl.FRAMEBUFFER, this.drawBuffersExtension.COLOR_ATTACHMENT3_WEBGL, this.gl.TEXTURE_2D, this.positionTexture.texture, 0);
+    this.gl.framebufferTexture2D(this.gl.FRAMEBUFFER, this.drawBuffersExtension.COLOR_ATTACHMENT4_WEBGL, this.gl.TEXTURE_2D, this.specularityTexture.texture, 0);
   }
 
   use () {
@@ -43,7 +45,8 @@ class GBuffer extends GLFramebuffer {
       this.drawBuffersExtension.COLOR_ATTACHMENT0_WEBGL,
       this.drawBuffersExtension.COLOR_ATTACHMENT1_WEBGL,
       this.drawBuffersExtension.COLOR_ATTACHMENT2_WEBGL,
-      this.drawBuffersExtension.COLOR_ATTACHMENT3_WEBGL
+      this.drawBuffersExtension.COLOR_ATTACHMENT3_WEBGL,
+      this.drawBuffersExtension.COLOR_ATTACHMENT4_WEBGL
     ]);
   }
 }

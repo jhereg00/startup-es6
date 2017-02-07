@@ -37,6 +37,7 @@ function visualTest () {
   let Cylinder = require('lib/gl/primitives/Cylinder');
   let Sphere = require('lib/gl/primitives/Sphere');
   let Color = require('lib/Color');
+  let Material = require('lib/gl/Material');
   let PerspectiveCamera = require('lib/gl/cameras/PerspectiveCamera');
   window.scene = new Scene3d (1200,1200);
   scene.addTo(canvasContainer);
@@ -44,11 +45,19 @@ function visualTest () {
     new Cylinder(1,3,12,2,true)
   );
   let obj2 = new Object3d(
-    new Cylinder(1,3,12,2)
+    new Cylinder(1,3,12,2),
+    new Material({
+      color: new Color(10,30,30,1),
+      specularity: 2
+    })
   );
   obj2.moveBy(1,-2,8);
   let obj3 = new Object3d(
-    new Sphere(.6,40)
+    new Sphere(.6,40),
+    new Material({
+      color: new Color(200,80,100,1),
+      specularity: 0.05
+    })
   );
   let obj4 = new Object3d(
     new Sphere(.2)
@@ -57,7 +66,7 @@ function visualTest () {
   let light = new Light(Light.POINT, new Color(40,40,60), new Color(255,255,255), new Color(220,220,255,.5), 20, 18);
   light.moveTo(-2,2,-8);
   // light.bias = .2;
-  let light2 = new Light(Light.POINT, new Color(0,0,0,0), new Color(80,120,200,.3), new Color(0,0,0,0), 20, 18);
+  let light2 = new Light(Light.POINT, new Color(0,0,0), new Color(80,120,200,.3), new Color(0,0,0,0), 20, 18);
   light2.moveTo(5,0,18);
   let light3 = new Light(Light.POINT, new Color(0,0,0,0), new Color(200,0,0,1), new Color(0,0,255,1), 10, 0);
   light3.specularIntensity = 5;

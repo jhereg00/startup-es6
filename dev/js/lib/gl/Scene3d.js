@@ -34,7 +34,7 @@ const DEFAULT_HEIGHT = 720;
 
 const OBJECT_SHADERS = ['/glsl/object.vs.glsl','/glsl/object.fs.glsl'];
 const OBJECT_ATTRIBUTES = ['aPosition','aNormal'];
-const OBJECT_UNIFORMS = ['uProjectionMatrix','uMVMatrix','uNormalMatrix','uColor','uColorTexture'];
+const OBJECT_UNIFORMS = ['uProjectionMatrix','uMVMatrix','uNormalMatrix','uColor','uColorTexture','uSpecularity'];
 
 class Scene3d extends GLScene {
   // constructor
@@ -87,7 +87,7 @@ class Scene3d extends GLScene {
       lighting: [
         ['/glsl/out.vs.glsl','/glsl/lighting.fs.glsl'],
         ['aPosition','aUV'],
-        ['uNormalTexture','uPositionTexture','uColorTexture','uLights','uNumLights','uCameraPosition','uShadowCube']
+        ['uNormalTexture','uPositionTexture','uColorTexture','uSpecularityTexture','uLights','uNumLights','uCameraPosition','uShadowCube']
       ]
     }
     this._materialPrograms = {};
@@ -113,8 +113,8 @@ class Scene3d extends GLScene {
     this.buffers.elements.bindData(mesh.elements);
   }
   _bindMaterial (program, material) {
-    // temp
-    this.gl.uniform3fv(program.u.uColor, new Float32Array([1,.5,.5]));
+    this.gl.uniform4fv(program.u.uColor, material.color.toFloatArray());
+    this.gl.uniform1f(program.u.uSpecularity, material.specularity);
   }
   _drawObjects () {
     for (let p in this._materialPrograms) {
@@ -162,12 +162,13 @@ class Scene3d extends GLScene {
     this.buffers.aUV.bindData(program.a.aUV, [0,0,1,0,1,1,0,1]);
 
     let p = program;
+    let textureBindingOffset = 4;
     for (let i = 0, len = this.lights.length; i < len; i++) {
       // shadow cubes
-      this.gl.activeTexture(this.gl['TEXTURE' + (i + 3)]);
+      this.gl.activeTexture(this.gl['TEXTURE' + (i + textureBindingOffset)]);
       this.gl.bindTexture(this.gl.TEXTURE_CUBE_MAP, this.lights[i].texture);
       // this.gl.uniform1i( p.getStructPosition('uLights',i,'shadowCube'), i + 1 );
-      this.gl.uniform1i( p.getArrayPosition('uShadowCubes',i ), i + 3);
+      this.gl.uniform1i( p.getArrayPosition('uShadowCubes',i ), i + textureBindingOffset);
       // this.gl.uniform1i( p.u.uShadowCube, i + 3 );
 
       this.gl.uniform3fv(  p.getStructPosition('uLights',i,'position'),          this.lights[i].positionArray                    );
@@ -193,6 +194,9 @@ class Scene3d extends GLScene {
     this.gl.activeTexture(this.gl.TEXTURE2);
     this.framebuffers.gBuffer.colorTexture.bind();
     this.gl.uniform1i(program.u.uColorTexture, 2);
+    this.gl.activeTexture(this.gl.TEXTURE3);
+    this.framebuffers.gBuffer.specularityTexture.bind();
+    this.gl.uniform1i(program.u.uSpecularityTexture, 3);
 
     this.gl.uniform3fv(program.u.uCameraPosition, new Float32Array([this.activeCamera.position.x, this.activeCamera.position.y, this.activeCamera.position.z]));
 
@@ -294,7 +298,8 @@ class Scene3d extends GLScene {
   }
   _describeMaterial (material) {
     return {
-      COLOR_TEXTURE: material && material.texture ? 1 : 0
+      COLOR_TEXTURE: material && material.texture ? 1 : 0,
+      SPECULARITY_TEXTURE: material && material.specMap ? 1 : 0
     }
   }
 
