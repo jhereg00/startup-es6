@@ -49,13 +49,18 @@ class PerspectiveCamera extends Positionable {
         -1 + Math.cos(this.rotation.y) + Math.cos(this.rotation.x)
       ]).normalize().multiply(-1);
 
+      zAxisV.elements = zAxisV.elements.map((n) => Math.abs(n) < 1e-10 ? 0 : n);
+      if (zAxisV.eql(new Vector([0,0,0]))) {
+        zAxisV = new Vector([0,0,-1]);
+      }
+
       // console.log(zAxisV.inspect(), Math.sin(this.rotation.x), 1 - Math.cos(this.rotation.y + (Math.PI / 2)) - Math.sin(this.rotation.x));
     }
 
 		// cross with up to determine x
 		let xAxisV = new Vector([Math.sin(this.rotation.z), Math.cos(this.rotation.z), 0]).cross(zAxisV).normalize();
     if (xAxisV.eql(new Vector([0,0,0]))) {
-      xAxisV = new Vector([1,0,0]);
+      xAxisV = new Vector([-1,0,0]);
     }
 		// cross z and x to get y
 		let yAxisV = zAxisV.cross(xAxisV).normalize().multiply(-1);
@@ -66,6 +71,9 @@ class PerspectiveCamera extends Positionable {
 			[zAxisV.elements[0], zAxisV.elements[1], zAxisV.elements[2], 0],
 			[this.position.x,    this.position.y,    this.position.z,    1]
 		]).inverse();
+
+
+    // console.log(xAxisV, yAxisV, zAxisV, this.positionMatrix.inspect());
 
     let top = this.zNear * Math.tan(this.fieldOfViewY * Math.PI / 360);
 		let bottom = -top;

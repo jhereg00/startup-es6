@@ -140,7 +140,9 @@ class Scene3d extends GLScene {
   _drawLighting () {
     // update shadowmaps
     let program = this.programs.depth;
-    if (!this.lights.every((l) => l.drawShadowMap(this.gl, program, this.objects, this.buffers)))
+    let shadowObjects = this.objects.filter((o) => o.castsShadows);
+    this.gl.clearColor(1.0,1.0,1.0,1.0);
+    if (!this.lights.every((l) => l.drawShadowMap(this.gl, program, shadowObjects, this.buffers)))
       return false;
 
     program = GLProgram.getBy(
@@ -237,28 +239,29 @@ class Scene3d extends GLScene {
     this.buffers.aUV.bindData(this.programs.out.a.aUV, [1,1,0,1,0,0,1,0]);
 
     this.gl.activeTexture(this.gl.TEXTURE0);
-    // this.framebuffers.gBuffer.colorTexture.bind();
-    // this.gl.uniform1i(this.programs.out.u.uColorTexture, 0);
-    // this.gl.drawElements(this.gl.TRIANGLES, 6, this.gl.UNSIGNED_SHORT, 0);
-    //
-    // this.buffers.aPositionOut.bindData(this.programs.out.a.aPosition, [0,1,1,1,1,0,0,0]);
-    // this.framebuffers.gBuffer.normalTexture.bind();
-    // this.gl.drawElements(this.gl.TRIANGLES, 6, this.gl.UNSIGNED_SHORT, 0);
-    //
-    // this.buffers.aPositionOut.bindData(this.programs.out.a.aPosition, [-1,0,0,0,0,-1,-1,-1]);
-    // this.framebuffers.gBuffer.depthRGBTexture.bind();
-    // // this.gl.bindTexture(this.gl.TEXTURE_CUBE_MAP_POSITIVE_Z, this.lights[0].texture);
-    // this.gl.drawElements(this.gl.TRIANGLES, 6, this.gl.UNSIGNED_SHORT, 0);
+    this.framebuffers.gBuffer.colorTexture.bind();
+    this.gl.uniform1i(this.programs.out.u.uColorTexture, 0);
+    this.gl.drawElements(this.gl.TRIANGLES, 6, this.gl.UNSIGNED_SHORT, 0);
 
-    // this.buffers.aPositionOut.bindData(this.programs.out.a.aPosition, [0,0,1,0,1,-1,0,-1]);
-    this.buffers.aPositionOut.bindData(this.programs.out.a.aPosition, [-1,1,1,1,1,-1,-1,-1]);
+    this.buffers.aPositionOut.bindData(this.programs.out.a.aPosition, [0,1,1,1,1,0,0,0]);
+    this.framebuffers.gBuffer.normalTexture.bind();
+    this.gl.drawElements(this.gl.TRIANGLES, 6, this.gl.UNSIGNED_SHORT, 0);
+
+    this.buffers.aPositionOut.bindData(this.programs.out.a.aPosition, [-1,0,0,0,0,-1,-1,-1]);
+    // this.framebuffers.gBuffer.depthRGBTexture.bind();
+    this.lights[0].debugTex.bind();
+    // this.gl.bindTexture(this.gl.TEXTURE_CUBE_MAP_POSITIVE_Z, this.lights[0].texture);
+    this.gl.drawElements(this.gl.TRIANGLES, 6, this.gl.UNSIGNED_SHORT, 0);
+
+    this.buffers.aPositionOut.bindData(this.programs.out.a.aPosition, [0,0,1,0,1,-1,0,-1]);
+    // this.buffers.aPositionOut.bindData(this.programs.out.a.aPosition, [-1,1,1,1,1,-1,-1,-1]);
     this.framebuffers.lightingBuffer.texture.bind();
     this.gl.drawElements(this.gl.TRIANGLES, 6, this.gl.UNSIGNED_SHORT, 0);
   }
   draw () {
     // first, let's draw our g-buffer
     this.framebuffers.gBuffer.use();
-    this.gl.clearColor(this.backgroundColor.r, this.backgroundColor.g, this.backgroundColor.b, 1.0);
+    this.gl.clearColor(this.backgroundColor.r, this.backgroundColor.g, this.backgroundColor.b, this.backgroundColor.a);
     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
     this._drawObjects();
     this._drawLighting();

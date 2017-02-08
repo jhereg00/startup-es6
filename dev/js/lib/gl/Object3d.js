@@ -39,6 +39,8 @@ class Object3d extends Positionable {
     this.material = material || new Material();
     this.children = [];
 
+    this.castsShadows = true;
+
     this._modelMatrix = Matrix.I(4);
     this._worldMatrix = Matrix.I(4);
     this._mvMatrix = Matrix.I(4);
@@ -48,7 +50,7 @@ class Object3d extends Positionable {
   _updateMatrices () {
     this._worldMatrix = Matrix.translation3d(this.position.x, this.position.y, this.position.z);
     this._modelMatrix = Matrix.rotation3d(this.rotation.x, this.rotation.y, this.rotation.z);
-    this._mvMatrix = this._worldMatrix.multiply(this._modelMatrix);
+    this._mvMatrix = this._modelMatrix.multiply(this._worldMatrix);
     if (this.parent)
       this._mvMatrix = this._mvMatrix.multiply(this.parent.mvMatrix);
     this._normalMatrix = this._mvMatrix.inverse().transpose();

@@ -65,13 +65,17 @@ void main () {
 
       lighting += light.ambientColor.rgb * light.ambientColor.a * light.ambientIntensity * materialColor.rgb;
 
-      // lighting = textureCube(uShadowCube, lightDir * vec3(1.0,1.0,-1.0)).rgb;
+      // lighting = textureCube(uShadowCubes[i], lightDir * vec3(1.0,1.0,-1.0)).rgb;
       // lighting = normalize(position - light.position);
-      if (diffuse > 0.0 && (textureCube(uShadowCubes[i], lightDir * vec3(1.0,1.0,-1.0)).r + light.bias) > dist / light.radius) {
+      float shadowDepth = textureCube(uShadowCubes[i], lightDir * vec3(1.0,1.0,-1.0)).r;
+      if (diffuse > 0.0 && (shadowDepth == 0.0 || (shadowDepth + light.bias) > dist / light.radius)) {
         // lighting += vec3(1.0);
         lighting += light.diffuseColor.rgb * light.diffuseColor.a * (diffuseAttenuation * diffuse) * materialColor.rgb;
         specOut += light.specularColor.rgb * light.specularColor.a * specular * specularAttenuation;
       }
+
+      // lighting += (textureCube(uShadowCubes[i], lightDir * vec3(1.0,1.0,-1.0)).rgb * .25);
+      // lighting = vec3((lightDir * vec3(1.0,1.0,-1.0) + 1.0) / 2.0);
     }
   }
 

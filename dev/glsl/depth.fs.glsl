@@ -2,6 +2,7 @@
 precision highp float;
 
 varying float vDepth;
+varying vec3 vDir;
 
 void main () {
   // depth

@@ -6,6 +6,8 @@ const Positionable = require('lib/gl/Positionable');
 const PerspectiveCamera = require('lib/gl/cameras/PerspectiveCamera');
 const GLProgram = require('lib/gl/GLProgram');
 
+const GLTexture2d = require('lib/gl/GLTexture2d');
+
 const RESOLUTION = 2048;
 
 class Light extends Positionable {
@@ -27,12 +29,12 @@ class Light extends Positionable {
     switch (type) {
       case Light.POINT:
         this.shadowCameras = {
-          xPositive: new PerspectiveCamera ().rotateTo(0, -Math.PI / 2, 0),
-          xNegative: new PerspectiveCamera ().rotateTo(0, Math.PI / 2, 0),
-          yPositive: new PerspectiveCamera ().rotateTo(Math.PI / 2, 0, 0),
-          yNegative: new PerspectiveCamera ().rotateTo(-Math.PI / 2, 0, 0),
-          zPositive: new PerspectiveCamera ().rotateTo(0, 0, 0),
-          zNegative: new PerspectiveCamera ().rotateTo(0, Math.PI, 0)
+          xPositive: new PerspectiveCamera (45 + (1/this.radius)*360,1,1,this.radius).rotateTo(0, Math.PI / 2, 0),
+          xNegative: new PerspectiveCamera (45 + (1/this.radius)*360,1,1,this.radius).rotateTo(0, -Math.PI / 2, 0),
+          yPositive: new PerspectiveCamera (45 + (1/this.radius)*360,1,1,this.radius).rotateTo(-Math.PI / 2, 0, 0),
+          yNegative: new PerspectiveCamera (45 + (1/this.radius)*360,1,1,this.radius).rotateTo(Math.PI / 2, 0, 0),
+          zPositive: new PerspectiveCamera (45 + (1/this.radius)*360,1,1,this.radius).rotateTo(0, 0, 0),
+          zNegative: new PerspectiveCamera (45 + (1/this.radius)*360,1,1,this.radius).rotateTo(0, Math.PI, 0)
         }
         this.hasCubeMap = true;
         break;
@@ -65,6 +67,8 @@ class Light extends Positionable {
       this.renderbuffer = gl.createRenderbuffer();
       gl.bindRenderbuffer(gl.RENDERBUFFER, this.renderbuffer);
       gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, RESOLUTION, RESOLUTION);
+
+      this.debugTex = new GLTexture2d (gl, null, RESOLUTION, RESOLUTION);
     }
     switch (this.type) {
       case Light.POINT:
@@ -84,8 +88,8 @@ class Light extends Positionable {
           gl.uniformMatrix4fv(program.u.uProjectionMatrix, false, this.shadowCameras[cam].projectionMatrix.flatten());
 
           // gl.clearColor(1.0,1.0,1.0,1.0);
-          // gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-          gl.clear(gl.DEPTH_BUFFER_BIT);
+          gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+          // gl.clear(gl.DEPTH_BUFFER_BIT);
 
           objectList.forEach(function (o) {
             gl.uniformMatrix4fv(program.u.uMVMatrix, false, o.mvMatrix.flatten());
@@ -94,6 +98,21 @@ class Light extends Positionable {
             gl.drawElements(gl.TRIANGLES, o.mesh.elements.length, gl.UNSIGNED_SHORT, 0);
           });
         }
+
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.debugTex.texture, 0);
+        gl.uniformMatrix4fv(program.u.uProjectionMatrix, false, this.shadowCameras['xNegative'].projectionMatrix.flatten());
+
+        // gl.clearColor(1.0,1.0,1.0,1.0);
+        // gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        // gl.clear(gl.DEPTH_BUFFER_BIT);
+
+        objectList.forEach(function (o) {
+          gl.uniformMatrix4fv(program.u.uMVMatrix, false, o.mvMatrix.flatten());
+          buffers.aPosition.bindData(program.a.aPosition, o.mesh.vertices);
+          buffers.elements.bindData(o.mesh.elements);
+          gl.drawElements(gl.TRIANGLES, o.mesh.elements.length, gl.UNSIGNED_SHORT, 0);
+        });
+
         break;
     }
     return true;
