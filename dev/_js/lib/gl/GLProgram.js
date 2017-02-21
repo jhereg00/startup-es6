@@ -4,11 +4,9 @@
  * Creates and controls a shader program.
  *
  * @param {WebGLRenderingContext} gl
- * @param {object} options
- *   @param {String[]} shaders - files of the shaders the program uses
- *   @param {String[]} attributes - attributes the program keeps track of
- *   @param {String[]} uniforms - uniforms the program keeps track of
- *   @param {object} definitions - extra things to define in the shaders
+ * @param {String[]} shaderUrls
+ * @param {String[]} attributeNames
+ * @param {String[]} uniformNames
  *
  * @method use - binds the program and preps attributes and uniforms to have data bound to them
  * @method addAttribute
@@ -35,11 +33,11 @@ let activePrograms = [];
 
 // class
 class GLProgram {
-  constructor (gl, options) {//shaders, attributeNames, uniformNames, definitions) {
+  constructor (gl, shaders, attributeNames, uniformNames, definitions) {
     this.ready = false;
     this._readyFns = [];
     if (!gl || !(gl instanceof WebGLRenderingContext)) {
-      throw new Error('GLProgram requires a WebGLRenderingContext as its first argument');
+      throw new Error('GLShader requires a WebGLRenderingContext as its first argument');
     }
     this.gl = gl;
 
@@ -47,14 +45,7 @@ class GLProgram {
     this.program = program;
 
     let shadersReady = 0;
-    if (!options || !options.shaders) {
-      throw new Error('GLProgram requires an array of shader file paths');
-    }
-
-    let shaders = options.shaders.map((x) => x instanceof GLShader ? x : new GLShader(this.gl, {
-      filePath: x,
-      definitions: options.definitions
-    }));
+    shaders = shaders.map((x) => new GLShader(this.gl, x, null, definitions));
     shaders.forEach((function (s) {
       s.addReadyListener((function () {
         shadersReady++;
@@ -64,15 +55,18 @@ class GLProgram {
       }).bind(this));
     }).bind(this));
 
-    this._attributeNames = options.attributes || [];
-    this._uniformNames = options.uniforms || [];
+    this._attributeNames = attributeNames || [];
+    this._uniformNames = uniformNames || [];
     this.attributes = {};
     this.uniforms = {};
     this.shaders = shaders;
 
     // store arguments for comparison
-    let definitionsString = JSON.stringify(options.definitions || {});
-    this._passedArguments = options.shaders.join(',') + ';' + definitionsString;
+    let definitionsString = "";
+    for (let prop in definitions) {
+      definitionsString += prop + "=" + definitions[prop] + "&";
+    }
+    this._passedArguments = Array.from(arguments).slice(1,4).join(';') + ';' + definitionsString;
     createdPrograms.push(this);
   }
   _initialize () {

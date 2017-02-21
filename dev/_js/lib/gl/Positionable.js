@@ -7,8 +7,6 @@
  * @method moveBy (x,y,z)
  * @method rotateTo (x,y,z)
  * @method rotateBy (x,y,z)
- * @method scaleTo (x,y,z)
- * @method scaleBy (x,y,z)
  *
  * @prop _needsUpdate
  * @prop {Matrix} MVMatrix
@@ -18,8 +16,6 @@ class Positionable {
   constructor () {
     this.position = {x:0,y:0,z:0};
     this.rotation = {x:0,y:0,z:0};
-    this.scale = {x:1,y:1,z:1};
-    this._needsUpdate = false;
   }
   _flagForUpdate () {
     this._needsUpdate = true;
@@ -71,9 +67,9 @@ class Positionable {
   }
   scaleBy (x,y,z) {
     this.scaleTo(
-      this.scale.x * x,
-      this.scale.y * y,
-      this.scale.z * z
+      this.scale.x + x,
+      this.scale.y + y,
+      this.scale.z + z
     );
     this._flagForUpdate();
     return this;

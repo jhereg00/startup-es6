@@ -2,13 +2,8 @@
  * GLShader class
  *
  * @param gl - instance to bind shader to
- * @param options
- *   @param filePath - file to load as a shader
- *   @param type - 'VERTEX_SHADER' or 'FRAGMENT_SHADER'
- *   @param definitions - extra things to define in the shader.  For example, if
- *     you wanted to define a custom color, you could do something like
- *     { MY_COLOR: "vec3(1.0,0.0,0.0)" }
- *     and it would prepend the shader with `#define MY_COLOR vec3(1.0,0.0,0.0)`
+ * @param filePath - file to load as a shader
+ * @param type - 'VERTEX_SHADER' or 'FRAGMENT_SHADER'
  *
  * @property {boolean} ready
  *
@@ -24,14 +19,13 @@
 
 // requirements
 const AjaxRequest = require('lib/AjaxRequest');
-const extendObject = require('lib/extendObject');
 
 // store requests by url so we avoid doubling up
 let fileRequests = {};
 const vertexRegex = /gl_Position\s*=/;
 
 class GLShader {
-  constructor (gl, options) {
+  constructor (gl, filePath, shaderType, definitions) {
     this.ready = false;
     this._readyFns = [];
     if (!gl || !(gl instanceof WebGLRenderingContext)) {
@@ -39,30 +33,29 @@ class GLShader {
     }
 
     this.gl = gl;
-    extendObject(this, options);
-
-    if (this.shaderType)
-      this.type = gl[this.shaderType];
-
+    if (shaderType)
+      this.type = gl[shaderType];
+    this.filePath = filePath;
     this.prependString = "";
-    if (this.definitions) {
-      for (let key in this.definitions) {
-        this.prependString += "#define " + key + " " + this.definitions[key] + "\n";
+
+    if (definitions) {
+      for (let key in definitions) {
+        this.prependString += "#define " + key + " " + definitions[key] + "\n";
       }
     }
 
-    if (!fileRequests[this.filePath]) {
+    if (!fileRequests[filePath]) {
       // haven't gotten (or started to get) this one yet
       // so start a new request
-      fileRequests[this.filePath] = new AjaxRequest({
-        url: this.filePath,
+      fileRequests[filePath] = new AjaxRequest({
+        url: filePath,
         complete: this.initialize.bind(this)
       });
     }
     else {
       // already got (or started to get) this file
       // so add a callback to the request
-      fileRequests[this.filePath].addStateListener(AjaxRequest.readyState.DONE, this.initialize.bind(this));
+      fileRequests[filePath].addStateListener(AjaxRequest.readyState.DONE, this.initialize.bind(this));
     }
   }
 
