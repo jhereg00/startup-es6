@@ -1,6 +1,6 @@
 const expect = chai.expect;
-const GLShader = require('lib/gl/GLShader');
-const GLProgram = require('lib/gl/GLProgram');
+const GLShader = require('lib/gl/core/GLShader');
+const GLProgram = require('lib/gl/core/GLProgram');
 
 describe("GLProgram (note: these fail if the shader is invalid)", function () {
   let canvas, gl;

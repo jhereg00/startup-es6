@@ -27,7 +27,7 @@
  * @static getActive - gets the currently active program for the passed WebGLRenderingContext
  */
 // requirements
-const GLShader = require('lib/gl/GLShader');
+const GLShader = require('lib/gl/core/GLShader');
 
 // settings
 let createdPrograms = [];

@@ -1,5 +1,5 @@
 const expect = chai.expect;
-const GLShader = require('lib/gl/GLShader');
+const GLShader = require('lib/gl/core/GLShader');
 const AjaxRequest = require('lib/AjaxRequest');
 
 describe("GLShader", function () {
