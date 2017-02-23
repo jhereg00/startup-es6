@@ -14,6 +14,7 @@ var gulp = require('gulp');
 gulp.task('scripts',require('./gulp-tasks/scripts'));
 // gulp.task('images',require('./gulp-tasks/images'));
 gulp.task('html',require('./gulp-tasks/html'));
+gulp.task('testData',require('./gulp-tasks/testData'));
 // gulp.task('autoguide',require('./gulp-tasks/autoguide'));
 
 // start a server for easy dev
@@ -26,9 +27,10 @@ gulp.task('watch',['build'], function () {
   gulp.watch([global.devPath + '/js/**/*', global.devPath + '/glsl/**/*'],['scripts']);
   // gulp.watch([global.devPath + '/images/**/*'],['images']);
   gulp.watch([global.devPath + '/**/*.html'],['html']);
+  gulp.watch([global.devPath + '/test-data/*'],['testData']);
 });
 // watch alias
-gulp.task('dev',['watch'],require('./gulp-tasks/webserver'));
+gulp.task('dev',['testData','watch'],require('./gulp-tasks/webserver'));
 
 // build
 gulp.task('build',['scripts','html']);
