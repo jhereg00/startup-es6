@@ -21,6 +21,7 @@ describe('lib', function () {
       require('tests/lib/gl/core/test.GLElementArrayBuffer');
       require('tests/lib/gl/core/test.GLScene');
       require('tests/lib/gl/core/test.GLTexture2d');
+      require('tests/lib/gl/core/test.GLFramebuffer');
     });
     describe('3d classes', function () {
       require('tests/lib/gl/test.Positionable');

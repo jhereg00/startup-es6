@@ -20,18 +20,31 @@ const extendObject = require('lib/extendObject');
 let DEFAULTS = {
   _width: 1024,
   _height: 1024,
+  dataType: 'UNSIGNED_BYTE',
+  format: 'RGBA',
   clamp: true,
   image: null
 }
 
 class GLTexture2d {
   constructor (gl, options) {
+    if (!gl || !(gl instanceof WebGLRenderingContext)) {
+      throw new Error(this.constructor.name + ' requires a WebGLRenderingContext as its first argument');
+      return false;
+    }
     this.gl = gl;
     this.texture = this.gl.createTexture();
     this.bind();
 
     extendObject(this, DEFAULTS);
     extendObject(this, options);
+
+    if (typeof this.dataType === 'string') {
+      this.dataType = this.gl[this.dataType];
+    }
+    if (typeof this.format === 'string') {
+      this.format = this.gl[this.format];
+    }
 
     // basic params
     this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.REPEAT);
@@ -72,7 +85,7 @@ class GLTexture2d {
       this._width = image.width;
       this._height = image.height;
       try {
-        this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, this.image);
+        this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.format, this.format, this.dataType, this.image);
       } catch (err) {
         console.error(err);
       }
@@ -80,7 +93,7 @@ class GLTexture2d {
     // making a blank texture
     else {
       console.log('setting blank');
-      this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this._width, this._height, 0, this.gl.RGBA, this.gl.UNSIGNED_BYTE, null);
+      this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.format, this._width, this._height, 0, this.format, this.dataType, null);
     }
 
     return this;
