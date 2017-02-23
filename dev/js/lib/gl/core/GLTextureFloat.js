@@ -3,7 +3,7 @@
  *
  * No tests for this, because it's just a convenience wrapper.
  */
-const GLTexture2d = require('lib/gl/GLTexture2d');
+const GLTexture2d = require('lib/gl/core/GLTexture2d');
 
 class GLTextureFloat extends GLTexture2d {
   constructor (gl, options) {

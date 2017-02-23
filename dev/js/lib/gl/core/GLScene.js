@@ -48,7 +48,7 @@ class GLScene {
     this.width = width;
     this.height = height;
 
-    this.backgroundColor = new Color(0,0,0,0);
+    this.backgroundColor = new Color(0,0,0,1);
     this.gl.clearDepth(1.0);
     // enable depth testing
     this.gl.enable(this.gl.DEPTH_TEST);
@@ -101,14 +101,14 @@ class GLScene {
   // interface functions
   initializePrograms () {
     this.programs = {};
-    console.error(this.constructor.name + ' does not override initializePrograms');
+    console.warn(this.constructor.name + ' does not override initializePrograms, and will likely do nothing');
   }
   initializeBuffers () {
     this.buffers = {};
-    console.error(this.constructor.name + ' does not override initializeBuffers');
+    console.warn(this.constructor.name + ' does not override initializeBuffers, and will likely do nothing');
   }
   draw () {
-    console.error(this.constructor.name + ' does not override draw');
+    console.warn(this.constructor.name + ' does not override draw, and will likely do nothing');
   }
 
   // methods

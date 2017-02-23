@@ -7,6 +7,7 @@ describe('GLFramebuffer', function () {
   before(function () {
     canvas = document.createElement('canvas');
     gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    console.log('-------GLFramebuffer--------');
   });
 
   it("requires gl object be passed", function () {

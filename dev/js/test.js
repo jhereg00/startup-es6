@@ -24,7 +24,9 @@ describe('lib', function () {
       require('tests/lib/gl/core/test.GLFramebuffer');
     });
     describe('3d classes', function () {
-      require('tests/lib/gl/test.Positionable');
+      require('tests/lib/gl/3d/test.Positionable');
     });
   });
+
+  after(require('test-scene'));
 });

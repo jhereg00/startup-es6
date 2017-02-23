@@ -27,12 +27,9 @@ void main () {
   // normals
   gl_FragData[1] = vec4((vNormal + vec3(1.0)) / 2.0, 1.0);
 
-  // depth
-  gl_FragData[2] = vec4(vDepth, vDepth, vDepth, 1.0);
-
   // position
-  gl_FragData[3] = vPos;
+  gl_FragData[2] = vPos;
 
   // specularity
-  gl_FragData[4] = vec4(vec3(uSpecularity), 1.0);
+  gl_FragData[3] = vec4(vec3(uSpecularity), 1.0);
 }

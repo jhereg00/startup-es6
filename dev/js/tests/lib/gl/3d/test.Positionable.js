@@ -1,5 +1,5 @@
 const expect = chai.expect;
-const Positionable = require('lib/gl/Positionable');
+const Positionable = require('lib/gl/3d/Positionable');
 
 describe('Positionable', function () {
   let instance;

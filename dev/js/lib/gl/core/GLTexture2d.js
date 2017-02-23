@@ -33,9 +33,8 @@ class GLTexture2d {
       return false;
     }
     this.gl = gl;
-    this.texture = this.gl.createTexture();
-    this.bind();
 
+    // save the settings and normalize a couple
     extendObject(this, DEFAULTS);
     extendObject(this, options);
 
@@ -46,18 +45,26 @@ class GLTexture2d {
       this.format = this.gl[this.format];
     }
 
+    // make and bind the texture
+    this.texture = this.gl.createTexture();
+    this.bind();
+
     // basic params
     this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.REPEAT);
     this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.REPEAT);
-    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.NEAREST_MIPMAP_LINEAR);
-    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
+    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.NEAREST);
+    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.NEAREST);
 
+    this._enableUpdateImage = true;
     this.setImage(this.image);
   }
   bind () {
     this.gl.bindTexture(this.gl.TEXTURE_2D, this.texture);
   }
   setImage (image = null) {
+    if (!this._enableUpdateImage)
+      return this;
+
     this.bind();
 
     // passed a src string rather than a real image?
@@ -72,16 +79,13 @@ class GLTexture2d {
 
     // check that the image is loaded first (assuming there is one)
     if (this.image && this.image instanceof HTMLImageElement && !this.image.complete) {
-      console.log('waiting for image to load');
       this.image.addEventListener('load',(function (e) {
-        console.log('image loaded:', e.target);
         this.setImage(this.image);
       }).bind(this));
       return this;
     }
     // loaded and ready
     else if (this.image) {
-      console.log('setting image to texture');
       this._width = image.width;
       this._height = image.height;
       try {
@@ -92,7 +96,6 @@ class GLTexture2d {
     }
     // making a blank texture
     else {
-      console.log('setting blank');
       this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.format, this._width, this._height, 0, this.format, this.dataType, null);
     }
 
