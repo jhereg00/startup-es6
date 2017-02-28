@@ -6,14 +6,13 @@ let ObjToJson = function (pretty) {
   this.pretty = pretty || false;
 
   this.objects = [];
+  this.materials = {};
 
   let objectEnd = (function () {
-    console.log('objectEnd');
     this.objectsAreIn = true;
     this.checkDone();
   }).bind(this);
   let materialEnd = (function () {
-    console.log('materialEnd');
     this.materialsAreIn = true;
     this.checkDone();
   }).bind(this);

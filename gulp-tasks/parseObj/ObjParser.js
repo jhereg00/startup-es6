@@ -1,5 +1,7 @@
 /**
  * Does the actual parsing of an obj file.
+ *
+ * check https://en.wikipedia.org/wiki/Wavefront_.obj_file for basics of the format
  */
 const Stream = require('stream');
 
@@ -43,11 +45,12 @@ var ObjParser = function () {
     objectMode: true
   });
 
-  this.stream
-    .on('error', (err) => console.error(err) )
-    .on('finish', function () { console.log('finish transform') })
-    .on('close', function () { console.log('close transform') })
-    .on('end', () => console.log('end transform'));
+  // debug helper
+  // this.stream
+  //   .on('error', (err) => console.error(err) )
+  //   .on('finish', function () { console.log('finish transform') })
+  //   .on('close', function () { console.log('close transform') })
+  //   .on('end', () => console.log('end transform'));
 }
 ObjParser.prototype = {
   _parseChunk: function (chunk) {
