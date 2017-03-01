@@ -57,4 +57,5 @@ describe('Object3d', function () {
     obj.addChild(obj2);
     expect(obj2.mvMatrix.equals(scaleMat.x(rotMat).x(translateMat))).to.be.true;
   });
+  it('creates mesh(es) and material(s) by loading JSON');
 });

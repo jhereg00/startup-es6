@@ -96,4 +96,20 @@ describe("GLProgram (note: these fail if the shader is invalid)", function () {
       done();
     });
   });
+  it("gets a previously initialized program by settings", function (done) {
+    let settings = {
+      shaders: ['/glsl/test.vs.glsl', '/glsl/test.fs.glsl'],
+      definitions: { testRetrieve : "1" }
+    };
+    
+    expect(GLProgram.getBy(gl, settings)).to.be.null;
+
+    let p = new GLProgram(
+      gl,
+      settings);
+    p.addReadyListener(function () {
+      expect(GLProgram.getBy(gl, settings)).to.equal(p);
+      done();
+    });
+  });
 });
