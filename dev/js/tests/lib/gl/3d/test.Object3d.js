@@ -58,4 +58,6 @@ describe('Object3d', function () {
     expect(obj2.mvMatrix.equals(scaleMat.x(rotMat).x(translateMat))).to.be.true;
   });
   it('creates mesh(es) and material(s) by loading JSON');
+  it('returns all vertices, uvs, and normals of its own mesh(es) sorted by material');
+  it('returns all tris of its own mesh(es) sorted by material');
 });

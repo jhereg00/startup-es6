@@ -150,8 +150,8 @@ ObjParser.prototype = {
     for (let i = 1; i < line.length; i++) {
       let attributes = line[i].split(/\//g);
       faceVertices.push(attributes[0]);
-      faceUVs.push(attributes[1] || null);
-      faceNormals.push(attributes[2] || null);
+      faceUVs.push(attributes[1] || 0);
+      faceNormals.push(attributes[2] || 0);
     }
     let face = {
       vertex: faceVertices,

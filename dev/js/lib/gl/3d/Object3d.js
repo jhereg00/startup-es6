@@ -88,6 +88,9 @@ class Object3d extends WorldPositionable {
   static getByName (name) {
     return objectsByName[name];
   }
+  static loadFromJSON (path) {
+    
+  }
 }
 
 module.exports = Object3d;
