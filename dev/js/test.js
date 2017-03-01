@@ -25,8 +25,10 @@ describe('lib', function () {
     });
     describe('3d classes', function () {
       require('tests/lib/gl/3d/test.Positionable');
+      require('tests/lib/gl/3d/test.WorldPositionable');
+      require('tests/lib/gl/3d/test.Object3d');
     });
   });
 
-  after(require('test-scene'));
+  // after(require('test-scene'));
 });

@@ -22,8 +22,7 @@ class Scene3d extends GLScene {
     options = options || {};
     // create some base junk we'll need
     super(options.width || DEFAULTS.width, options.height || DEFAULTS.height);
-    extendObject(this, DEFAULTS);
-    extendObject(this, options);
+    extendObject(this, DEFAULTS, options);
 
     this.objects = [];
     this.lights = [];

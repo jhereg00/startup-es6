@@ -18,6 +18,7 @@ const DEFAULTS = {
 
 class GLMultiFramebuffer extends GLFramebuffer {
   constructor (gl, options) {
+    options = options || {};
     options.textureNames = options.textureNames || DEFAULTS.textureNames;
     super(gl, options);
   }

@@ -22,8 +22,7 @@ class GLFramebuffer {
     }
     this.gl = gl;
 
-    extendObject(this, DEFAULTS);
-    extendObject(this, options);
+    extendObject(this, DEFAULTS, options);
 
     this.framebuffer = this.gl.createFramebuffer();
 

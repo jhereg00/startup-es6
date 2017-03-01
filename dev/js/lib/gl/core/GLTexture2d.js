@@ -35,8 +35,7 @@ class GLTexture2d {
     this.gl = gl;
 
     // save the settings and normalize a couple
-    extendObject(this, DEFAULTS);
-    extendObject(this, options);
+    extendObject(this, DEFAULTS, options);
 
     if (typeof this.dataType === 'string') {
       this.dataType = this.gl[this.dataType];

@@ -1,9 +1,11 @@
 /**
  * Parses .obj + .mtl files into the particular flavor of JSON
- * this lib likes.
+ * this lib likes.  In order to maximize async goodness, this
+ * parser assumbes both the obj and mtl files to have the same
+ * name (rather than waiting to find the `mtllib` declaration)
  *
- * For gulp love, its .gulp static method accepts and returns
- * a vinyl stream.
+ * For gulp love, its .gulp static method fits into a vinyl/gulp
+ * pipeline.
  */
 const fs = require('fs'),
       ObjParser = require('./ObjParser'),
