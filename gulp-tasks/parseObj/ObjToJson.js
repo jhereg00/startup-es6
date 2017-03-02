@@ -6,7 +6,7 @@ let ObjToJson = function (pretty) {
   this.pretty = pretty || false;
 
   this.objects = [];
-  this.materials = {};
+  this.materials = [];
 
   let objectEnd = (function () {
     this.objectsAreIn = true;
@@ -34,7 +34,7 @@ let ObjToJson = function (pretty) {
   this.materialsInStream
     .on('data', (function (chunk) {
       for (let mtl in chunk) {
-        this.materials[mtl] = chunk[mtl];
+        this.materials.push(chunk[mtl]);
       }
     }).bind(this))
     .on('end', materialEnd)

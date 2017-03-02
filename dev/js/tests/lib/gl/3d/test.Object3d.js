@@ -57,7 +57,19 @@ describe('Object3d', function () {
     obj.addChild(obj2);
     expect(obj2.mvMatrix.equals(scaleMat.x(rotMat).x(translateMat))).to.be.true;
   });
-  it('creates mesh(es) and material(s) by loading JSON');
-  it('returns all vertices, uvs, and normals of its own mesh(es) sorted by material');
-  it('returns all tris of its own mesh(es) sorted by material');
+  it('creates mesh and material by loading JSON', function (done) {
+    Object3d.loadFromJSON('test-data/testObj.json', function (createdObjects) {
+      try {
+        expect(createdObjects.length).to.equal(2);
+        expect(createdObjects[0].name).to.equal('Blob');
+        expect(createdObjects[1].getTrisByMaterial('ConeMtl').length).to.be.greaterThan(0);
+        expect(Material.getByName('ConeMtl')).to.exist();
+        done();
+      } catch (err) {
+        done(err);
+      }
+    });
+  });
+  it('returns all vertices, uvs, and normals of its own mesh sorted by material');
+  it('returns all tris of its own mesh sorted by material');
 });

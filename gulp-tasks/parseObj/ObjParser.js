@@ -104,21 +104,21 @@ ObjParser.prototype = {
     if (!this.activeObject.vertices) {
       this.activeObject.vertices = [];
     }
-    this.activeObject.vertices = this.activeObject.vertices.concat(line.splice(1));
+    this.activeObject.vertices = this.activeObject.vertices.concat(line.splice(1).map((x) => parseFloat(x,10)));
   },
 
   _addUV: function (line) {
     if (!this.activeObject.uvs) {
       this.activeObject.uvs = [];
     }
-    this.activeObject.uvs = this.activeObject.uvs.concat(line.splice(1));
+    this.activeObject.uvs = this.activeObject.uvs.concat(line.splice(1).map((x) => parseFloat(x,10)));
   },
 
   _addNormal: function (line) {
     if (!this.activeObject.normals) {
       this.activeObject.normals = [];
     }
-    this.activeObject.normals = this.activeObject.normals.concat(line.splice(1));
+    this.activeObject.normals = this.activeObject.normals.concat(line.splice(1).map((x) => parseFloat(x,10)));
   },
 
   _changeFaceSetting: function (line) {
@@ -148,7 +148,7 @@ ObjParser.prototype = {
     let faceUVs = [];
     let faceNormals = [];
     for (let i = 1; i < line.length; i++) {
-      let attributes = line[i].split(/\//g);
+      let attributes = line[i].split(/\//g).map((x) => parseInt(x,10));
       faceVertices.push(attributes[0]);
       faceUVs.push(attributes[1] || 0);
       faceNormals.push(attributes[2] || 0);

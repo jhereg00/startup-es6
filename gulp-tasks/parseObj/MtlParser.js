@@ -29,7 +29,7 @@ const identifiers = {
 }
 
 var MtlParser = function (mapPath) {
-  this.data = {};
+  this.data = [];
   this.activeMtl;
   this.mapPath = mapPath || "";
 
@@ -88,7 +88,7 @@ MtlParser.prototype = {
 
   _endCurrentMtl: function () {
     if (this.activeMtl) {
-      this.data[this.activeMtl.name] = this.activeMtl;
+      this.data.push(this.activeMtl);
     }
     this.activeMtl = null;
   },

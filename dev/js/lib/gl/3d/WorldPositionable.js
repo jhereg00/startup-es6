@@ -33,7 +33,6 @@ class WorldPositionable extends Positionable {
     this._modelMatrix = Matrix.scale3d(this.scale.x, this.scale.y, this.scale.z).multiply(Matrix.rotation3d(this.rotation.x, this.rotation.y, this.rotation.z));
     this._mvMatrix = this._modelMatrix.multiply(this._worldMatrix);
     if (this.parent) {
-      console.log(this.parent);
       this._mvMatrix = this._mvMatrix.multiply(this.parent.mvMatrix);
     }
 
@@ -45,6 +44,9 @@ class WorldPositionable extends Positionable {
   /////////////////////////
   addChild (obj) {
     this.children.push(obj);
+    if (obj.parent) {
+      obj.parent.children.splice(obj.parent.children.indexOf(obj),1);
+    }
     obj.parent = this;
     if (!this.mvMatrix.equals(Matrix.I(4))) {
       obj._flagForUpdate();

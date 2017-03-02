@@ -13,17 +13,20 @@
  *
  * @static @method {Object3d} loadFromJSON
  *   @param {string} JSONPath
+ *   @param {function} callback
+ *     @param {array<Object3d>} created Object3d instances
  * @static @method {Object3d} getByName
  *   @param {string} objectName
  */
 const extendObject = require('lib/extendObject');
+const AjaxRequest = require('lib/AjaxRequest');
 const WorldPositionable = require('lib/gl/3d/WorldPositionable');
+const Mesh = require('lib/gl/3d/Mesh');
 const Matrix = require('lib/math/Matrix');
 
 const DEFAULTS = {
   name: null,
   mesh: null,
-  meshes: [],
   children: [],
   castsShadows: true
 };
@@ -61,6 +64,12 @@ class Object3d extends WorldPositionable {
   /////////////////////////
   // public methods
   /////////////////////////
+  getTris (...args) {
+    return this.mesh ? this.mesh.getTris(...args) : [];
+  }
+  getTrisByMaterial (...args) {
+    return this.mesh ? this.mesh.getTrisByMaterial(...args) : [];
+  }
 
   /////////////////////////
   // getters and setters
@@ -82,14 +91,38 @@ class Object3d extends WorldPositionable {
     }
   }
 
+  get castsShadows () {
+    return this._castsShadows;
+  }
+  set castsShadows (v) {
+    this._castsShadows = v;
+    this.children.forEach((child) => child.castsShadows = v);
+  }
+
   /////////////////////////
   // static methods
   /////////////////////////
   static getByName (name) {
     return objectsByName[name];
   }
-  static loadFromJSON (path) {
-    
+  static loadFromJSON (path, callback) {
+    let loader = new AjaxRequest({
+      url: path,
+      success: function (response) {
+        let data = JSON.parse(response);
+        console.log(data, data.objects, data.objects.length);
+
+        let objects = [];
+        for (let o = 0, len = data.objects.length; o < len; o++) {
+          objects.push(new Object3d ({
+            name: data.objects[o].name,
+            mesh: new Mesh(data.objects[o])
+          }));
+        }
+
+        callback(objects);
+      }
+    });
   }
 }
 
