@@ -10,6 +10,7 @@ const GLElementArrayBuffer = require('lib/gl/core/GLElementArrayBuffer');
 const GLFramebuffer = require('lib/gl/core/GLFramebuffer');
 const GLMultiFramebuffer = require('lib/gl/core/GLMultiFramebuffer');
 const Matrix = require('lib/math/Matrix');
+const Object3d = require('lib/gl/3d/Object3d');
 const extendObject = require('lib/extendObject');
 
 const DEFAULTS = {
@@ -24,8 +25,8 @@ class Scene3d extends GLScene {
     super(options.width || DEFAULTS.width, options.height || DEFAULTS.height);
     extendObject(this, DEFAULTS, options);
 
-    this.objects = [];
-    this.lights = [];
+    this._objects = [];
+    this._lights = [];
 
     // check that we have the extension to use GBuffer
     let drawBuffersExtension = this.gl.getExtension('WEBGL_draw_buffers');
@@ -59,8 +60,8 @@ class Scene3d extends GLScene {
       },
       material: {
         shaders: ['/glsl/object.vs.glsl','/glsl/object.fs.glsl'],
-        attributes: ['aPosition','aNormal'],
-        uniforms: ['uProjectionMatrix','uMVMatrix','uNormalMatrix','uColor','uColorTexture','uSpecularity'],
+        attributes: ['aPosition','aNormal','aTransform'],
+        uniforms: ['uProjectionMatrix','uTransforms','uColor','uColorTexture','uSpecularity'],
         definitions: {
           COLOR_TEXTURE: 0,
           SPECULARITY_TEXTURE: 0
@@ -81,6 +82,7 @@ class Scene3d extends GLScene {
       aNormal: new GLArrayBuffer(this.gl),
       elements: new GLElementArrayBuffer(this.gl),
       aUV: new GLArrayBuffer(this.gl, { attributeSize: 2 }),
+      aTransform: new GLArrayBuffer(this.gl, { attributeSize: 1 }),
       aPositionOut: new GLArrayBuffer(this.gl, { attributeSize: 2 })
     }
     this.framebuffers = {
@@ -92,22 +94,59 @@ class Scene3d extends GLScene {
   _drawObjects () {
     // TEMP
     let program = GLProgram.getBy(this.gl, this.dynamicProgramSettings.material);
+    if (!program) {
+      program = new GLProgram(this.gl, this.dynamicProgramSettings.material);
+    }
+
     if (!program.ready)
       return false;
+
     program.use();
     this.framebuffers.gBuffer.use();
-    this.buffers.aPosition.bindData(program.a.aPosition, [-.5,-.5,0,.5,-.5,0,.5,.5,0]);
-    this.buffers.aNormal.bindData(program.a.aNormal, [0,0,1,0,0,1,0,0,1]);
-    this.buffers.elements.bindData([0,1,2]);
 
+    // first, build our data
+    let positionArray = [];
+    let uvArray = [];
+    let normalArray = [];
+    let transformIndexArray = [];
+    let transformArray = [];
+    let indexArray = [];
+    let offset = 0;
+    for (let o = 0, len = this._objects.length; o < len; o++) {
+      let obj = this._objects[o];
+      let objElements = obj.getElements(offset);
+      console.log(objElements, Math.max.apply(undefined,objElements.indices), objElements.data.position.length / 3);
+      positionArray = positionArray.concat(objElements.data.position);
+      uvArray = uvArray.concat(objElements.data.uv);
+      normalArray = normalArray.concat(objElements.data.normal);
+      transformIndexArray.push(transformArray.length);
+      transformArray.push(obj.mvMatrix, obj.normalMatrix);
+      indexArray = indexArray.concat(objElements.indices);
+      offset = positionArray.length / 3;
+    }
+
+    // assign indices as attributes
+    this.buffers.aPosition.bindData(program.a.aPosition, positionArray);
+    this.buffers.aNormal.bindData(program.a.aNormal, normalArray);
+    // this.buffers.aUV.bindData(program.a.aUV, uvArray);
+    this.buffers.aTransform.bindData(program.a.aTransform, transformIndexArray);
+    // element indices is entirely incremental
+    this.buffers.elements.bindData(indexArray);
+
+    console.log(Math.max.apply(undefined, indexArray), positionArray.length / 3, uvArray.length / 2, normalArray.length / 2, transformIndexArray.length);
+
+    // assign actual data as uniforms
+    for (let i = 0, len = transformArray.length; i < len; i++) {
+      this.gl.uniformMatrix4fv( program.getArrayPosition('uTransforms',i), false, transformArray[i].flatten() );
+    }
+
+    // temp for materials
     this.gl.uniform4fv(program.u.uColor, [1.0,0.0,0.0,1.0]);
     this.gl.uniform1f(program.u.uSpecularity, 1.0);
 
-    this.gl.uniformMatrix4fv(program.u.uMVMatrix, false, Matrix.I(4).flatten());
-    this.gl.uniformMatrix4fv(program.u.uNormalMatrix, false, Matrix.I(4).inverse().transpose().flatten());
     this.gl.uniformMatrix4fv(program.u.uProjectionMatrix, false, Matrix.I(4).flatten());
 
-    this.gl.drawElements(this.gl.TRIANGLES, 3, this.gl.UNSIGNED_SHORT, 0);
+    this.gl.drawElements(this.gl.TRIANGLES, 54, this.gl.UNSIGNED_SHORT, 0);
   }
 
   _drawOutDebug () {
@@ -149,7 +188,7 @@ class Scene3d extends GLScene {
         this.framebuffers.lightingBuffer.texture.bind();
       }
 
-      this.gl.drawElements(this.gl.TRIANGLES, 6, this.gl.UNSIGNED_SHORT, 0);
+      // this.gl.drawElements(this.gl.TRIANGLES, 6, this.gl.UNSIGNED_SHORT, 0);
     }
   }
 
@@ -166,6 +205,13 @@ class Scene3d extends GLScene {
     // clear the framebuffer, drawing to the canvas this time
     this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
     this._drawOutDebug();
+  }
+
+  addElement (el) {
+    // TODO: find a clean way to automatically add children, even if they are added to objects already in the scene
+    if (el instanceof Object3d) {
+      this._objects.push(el);
+    }
   }
 }
 

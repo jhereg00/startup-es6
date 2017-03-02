@@ -31,5 +31,5 @@ describe('lib', function () {
     });
   });
 
-  // after(require('test-scene'));
+  after(require('test-scene'));
 });

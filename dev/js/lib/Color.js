@@ -12,7 +12,7 @@
 const extendObject = require('lib/extendObject');
 
 class Color {
-  constructor (r, g, b, a) {
+  constructor (r, g, b, a, forceParseAsFloats) {
     let values = {};
     // check if passed an array
     if (r instanceof Array) {
@@ -41,8 +41,11 @@ class Color {
 
     // normalize floats to int of 255
     // if passed a decimal value, assume it's this style
-    if (values.r % 1 || values.g % 1 || values.b % 1) {
-      ['r','g','b'].forEach((x) => Math.floor(x * 255));
+    if (forceParseAsFloats || values.r % 1 || values.g % 1 || values.b % 1) {
+      for (let prop in values) {
+        if (prop !== 'a')
+          values[prop] = Math.floor(values[prop] * 255);
+      }
     }
 
     if (values.a === undefined) {

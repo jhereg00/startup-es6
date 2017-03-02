@@ -18,10 +18,10 @@ describe("Mesh", function () {
       });
     }
   });
-  it('stores vertex data as float32 arrays', function () {
-    expect(testMesh.vertices).to.be.instanceof(Float32Array);
-    expect(testMesh.uvs).to.be.instanceof(Float32Array);
-    expect(testMesh.normals).to.be.instanceof(Float32Array);
+  it('stores vertex data', function () {
+    expect(testMesh.vertices).to.be.instanceof(Array);
+    expect(testMesh.uvs).to.be.instanceof(Array);
+    expect(testMesh.normals).to.be.instanceof(Array);
   });
   it('gets all tris, offsetting the element index by a passed value', function () {
     let tris = testMesh.getTris();

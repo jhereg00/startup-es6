@@ -70,6 +70,16 @@ class Object3d extends WorldPositionable {
   getTrisByMaterial (...args) {
     return this.mesh ? this.mesh.getTrisByMaterial(...args) : [];
   }
+  getElements (...args) {
+    return this.mesh ? this.mesh.getElements(...args) : {
+      data: {
+        position: [],
+        normal: [],
+        uv: []
+      },
+      indices: []
+    };
+  }
 
   /////////////////////////
   // getters and setters
@@ -110,7 +120,6 @@ class Object3d extends WorldPositionable {
       url: path,
       success: function (response) {
         let data = JSON.parse(response);
-        console.log(data, data.objects, data.objects.length);
 
         let objects = [];
         for (let o = 0, len = data.objects.length; o < len; o++) {

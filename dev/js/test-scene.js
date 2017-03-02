@@ -3,18 +3,39 @@
  *
  * Can't really automate this...
  */
+
+// get the things we're playing with
+const Scene3d = require('lib/gl/3d/Scene3d'),
+      Object3d = require('lib/gl/3d/Object3d')
+      ;
+
 module.exports = function () {
   const TARGET_FPS = 45;
   const FPS_DELAY = 1000; // time before we start counting FPS
 
   console.log('--------START TEST SCENE OUTPUT-------');
 
-  // get the things we're playing with
-  const Scene3d = require('lib/gl/3d/Scene3d');
-
   // initialize a new scene
   let scene = new Scene3d ();
   scene.addTo(document.getElementById('canvasContainer'));
+
+  // put some objects in nyah
+  let blob, cone;
+  Object3d.loadFromJSON("test-data/testObj.json", function (objects) {
+    console.log(objects);
+    objects.forEach((o) => scene.addElement(o));
+    blob = Object3d.getByName('Blob');
+    cone = Object3d.getByName('Cone_Cone.001');
+    blob.addChild(cone);
+    // blob.getElements();
+    scene.drawDebug();
+    requestAnimationFrame(function () {
+      scene.drawDebug();
+      requestAnimationFrame(function () {
+        scene.drawDebug();
+      })
+    })
+  });
 
   // fps tracker
   function updateFPSDebug (deltaTime) {
@@ -58,7 +79,7 @@ module.exports = function () {
       scene.drawDebug();
       updateFPSDebug(deltaTime);
     }
-    requestAnimationFrame(loop);
+    // requestAnimationFrame(loop);
     loopLastTime = performance.now();
   })();
 }

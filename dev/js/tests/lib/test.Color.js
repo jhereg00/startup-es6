@@ -72,4 +72,10 @@ describe('Color', function () {
     c.a = .8;
     expect(c.toFloatArray()).to.eql([0,1,.6,.8]);
   });
+
+  it('can be forced to parse its values as floats', function () {
+    var c = new Color(1,1,1,1,true);
+    expect(c.r).to.equal(255);
+    expect(c.toFloatArray()).to.eql([1,1,1,1]);
+  });
 });

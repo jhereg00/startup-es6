@@ -121,6 +121,7 @@ class GLProgram {
 
     this.gl.useProgram(this.program);
     this._attributeNames.forEach((function (name) {
+      console.log(name);
       this.attributes[name] = this.gl.getAttribLocation(this.program, name);
       this.gl.enableVertexAttribArray(this.attributes[name]);
     }).bind(this));

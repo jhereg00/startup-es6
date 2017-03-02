@@ -28,6 +28,7 @@ var ObjParser = function () {
     smooth: defaultFaceSettings.smooth
   };
   this.activeFaceGroup = defaultFaceSettings.group;
+  this.indexOffset = 0;
 
   this.stream = new Stream.Transform({
     transform: (function (chunk, encoding, callback) {
@@ -87,6 +88,7 @@ ObjParser.prototype = {
   _endCurrentObject: function () {
     if (this.activeObject) {
       this.data.push(this.activeObject);
+      this.indexOffset += this.activeObject.vertices.length / 3;
     }
     this.activeObject = null;
   },
@@ -148,10 +150,10 @@ ObjParser.prototype = {
     let faceUVs = [];
     let faceNormals = [];
     for (let i = 1; i < line.length; i++) {
-      let attributes = line[i].split(/\//g).map((x) => parseInt(x,10));
-      faceVertices.push(attributes[0]);
-      faceUVs.push(attributes[1] || 0);
-      faceNormals.push(attributes[2] || 0);
+      let attributes = line[i].split(/\//g).map((x) => parseInt(x,10) - 1);
+      faceVertices.push(attributes[0] - this.indexOffset);
+      faceUVs.push(attributes[1] !== -1 && !isNaN(attributes[1]) ? attributes[1] - this.indexOffset : 0);
+      faceNormals.push(attributes[2] !== -1 && !isNaN(attributes[2]) ? attributes[2] - this.indexOffset : 0);
     }
     let face = {
       vertex: faceVertices,
