@@ -11,6 +11,7 @@ const GLFramebuffer = require('lib/gl/core/GLFramebuffer');
 const GLMultiFramebuffer = require('lib/gl/core/GLMultiFramebuffer');
 const Matrix = require('lib/math/Matrix');
 const Object3d = require('lib/gl/3d/Object3d');
+const Material = require('lib/gl/3d/Material');
 const extendObject = require('lib/extendObject');
 
 const DEFAULTS = {
@@ -61,12 +62,8 @@ class Scene3d extends GLScene {
       },
       material: {
         shaders: ['/glsl/object.vs.glsl','/glsl/object.fs.glsl'],
-        attributes: ['aPosition','aNormal','aTransform'],
-        uniforms: ['uProjectionMatrix','uTransforms','uColor','uColorTexture','uSpecularity'],
-        definitions: {
-          COLOR_TEXTURE: 0,
-          SPECULARITY_TEXTURE: 0
-        }
+        attributes: ['aPosition','aNormal','aUV','aTransform'],
+        uniforms: ['uProjectionMatrix','uTransforms','uAmbient','uDiffuse','uDiffuseMap','uSpecular','uSpecularMap','uSpecularExponent','uSpecularExponentMap']
       }
     };
     this._materialPrograms = {};
@@ -87,69 +84,101 @@ class Scene3d extends GLScene {
       aPositionOut: new GLArrayBuffer(this.gl, { attributeSize: 2 })
     }
     this.framebuffers = {
-      gBuffer: new GLMultiFramebuffer(this.gl, { size: fboSize }),
+      gBuffer: new GLMultiFramebuffer(this.gl, {
+        size: fboSize,
+        textureNames: [
+          'ambient',
+          'diffuse',
+          'specular',
+          'normal',
+          'position',
+          'specularExponent'
+        ]
+      }),
       lightingBuffer: new GLFramebuffer(this.gl, { size: fboSize })
     }
   }
 
   _drawObjects () {
-    // TEMP
-    let program = GLProgram.getBy(this.gl, this.dynamicProgramSettings.material);
-    if (!program) {
-      program = new GLProgram(this.gl, this.dynamicProgramSettings.material);
+    let allMtls = Material.getAll();
+    for (let mtl in allMtls) {
+      let material = allMtls[mtl];
+      // get our data first to see if we even need to mess with a program
+      let positionArray = [];
+      let uvArray = [];
+      let normalArray = [];
+      let transformIndexArray = [];
+      let transformArray = [];
+      let indexArray = [];
+      let offset = 0;
+      for (let o = 0, len = this._objects.length; o < len; o++) {
+        let obj = this._objects[o];
+        let objElements = obj.getElements(mtl, offset);
+        positionArray = positionArray.concat(objElements.positions);
+        uvArray = uvArray.concat(objElements.uvs);
+        normalArray = normalArray.concat(objElements.normals);
+        transformIndexArray = transformIndexArray.concat(new Array(objElements.positions.length / 3).fill(transformArray.length));
+        transformArray.push(obj.mvMatrix, obj.normalMatrix);
+        indexArray = indexArray.concat(objElements.indices);
+        offset = positionArray.length / 3;
+        // console.log(objElements, Math.max.apply(undefined,objElements.indices), offset);
+      }
+
+      // make sure some mesh uses this, else bail
+      if (!indexArray.length)
+        continue;
+
+      let programSettings = extendObject({},this.dynamicProgramSettings.material,{definitions: allMtls[mtl].getProgramDefinitions()});
+      let program = GLProgram.getBy(this.gl, programSettings);
+      if (!program) {
+        program = new GLProgram(this.gl, programSettings);
+      }
+
+      if (!program.ready)
+        return false;
+
+      program.use();
+      this.framebuffers.gBuffer.use();
+
+      // assign indices as attributes
+      this.buffers.aPosition.bindData(program.a.aPosition, positionArray, this.gl.DYNAMIC_DRAW);
+      this.buffers.aNormal.bindData(program.a.aNormal, normalArray, this.gl.DYNAMIC_DRAW);
+      this.buffers.aUV.bindData(program.a.aUV, uvArray, this.gl.DYNAMIC_DRAW);
+      this.buffers.aTransform.bindData(program.a.aTransform, transformIndexArray, this.gl.STATIC_DRAW);
+      this.buffers.elements.bindData(indexArray, this.gl.DYNAMIC_DRAW);
+
+      // assign actual data as uniforms
+      for (let i = 0, len = transformArray.length; i < len; i++) {
+        this.gl.uniformMatrix4fv( program.getArrayPosition('uTransforms',i), false, transformArray[i].flatten() );
+      }
+
+      // assign material stuff
+      this.gl.uniform4fv(program.u.uAmbient, material.ambient.toFloatArray());
+      this.gl.uniform4fv(program.u.uDiffuse, material.diffuse.toFloatArray());
+      this.gl.uniform4fv(program.u.uSpecular, material.specular.toFloatArray());
+      this.gl.uniform1f(program.u.uSpecularExponent, material.specularExponent);
+
+      this.gl.uniformMatrix4fv(program.u.uProjectionMatrix, false, Matrix.I(4).flatten());
+
+      // handle textures
+      let texData = material.getGLTextures(this.gl);
+
+      this.gl.activeTexture(this.gl.TEXTURE0);
+      if (texData.diffuseMap) texData.diffuseMap.bind();
+      this.gl.uniform1i(this.programs.out.u.uDiffuseMap, 0);
+      this.gl.activeTexture(this.gl.TEXTURE1);
+      if (texData.specularMap) texData.specularMap.bind();
+      this.gl.uniform1i(this.programs.out.u.uSpecularMap, 1);
+      this.gl.activeTexture(this.gl.TEXTURE2);
+      if (texData.specularExponentMap) texData.specularExponentMap.bind();
+      this.gl.uniform1i(this.programs.out.u.uSpecularExponentMap, 2);
+      this.gl.activeTexture(this.gl.TEXTURE3);
+      if (texData.normalMap) texData.normalMap.bind();
+      this.gl.uniform1i(this.programs.out.u.uNormalMap, 3);
+
+      // console.log(this.gl.getActiveAttrib(program.program, 0), this.gl.getActiveAttrib(program.program, 1), this.gl.getActiveAttrib(program.program, 2), this.gl.getActiveAttrib(program.program, 3), this.buffers.aUV);
+      this.gl.drawElements(this.gl.TRIANGLES, indexArray.length, this.gl.UNSIGNED_SHORT, 0);
     }
-
-    if (!program.ready)
-      return false;
-
-    program.use();
-    this.framebuffers.gBuffer.use();
-
-    // first, build our data
-    let positionArray = [];
-    let uvArray = [];
-    let normalArray = [];
-    let transformIndexArray = [];
-    let transformArray = [];
-    let indexArray = [];
-    let offset = 0;
-    for (let o = 0, len = this._objects.length; o < len; o++) {
-      let obj = this._objects[o];
-      let objElements = obj.getElements(offset);
-      positionArray = positionArray.concat(objElements.positions);
-      uvArray = uvArray.concat(objElements.uvs);
-      normalArray = normalArray.concat(objElements.normals);
-      transformIndexArray = transformIndexArray.concat(new Array(objElements.positions.length / 3).fill(transformArray.length));
-      transformArray.push(obj.mvMatrix, obj.normalMatrix);
-      indexArray = indexArray.concat(objElements.indices);
-      offset = positionArray.length / 3;
-      // console.log(objElements, Math.max.apply(undefined,objElements.indices), offset);
-    }
-
-    // assign indices as attributes
-    this.buffers.aPosition.bindData(program.a.aPosition, positionArray, this.gl.DYNAMIC_DRAW);
-    this.buffers.aNormal.bindData(program.a.aNormal, normalArray, this.gl.DYNAMIC_DRAW);
-    this.buffers.aUV.bindData(program.a.aUV, uvArray);
-    this.buffers.aTransform.bindData(program.a.aTransform, transformIndexArray, this.gl.STATIC_DRAW);
-    // element indices is entirely incremental
-    this.buffers.elements.bindData(indexArray, this.gl.DYNAMIC_DRAW);
-
-    // console.log(Math.max.apply(undefined, indexArray), positionArray.length / 3, uvArray.length / 2, normalArray.length / 3, transformIndexArray.length);
-
-    // assign actual data as uniforms
-    for (let i = 0, len = transformArray.length; i < len; i++) {
-      this.gl.uniformMatrix4fv( program.getArrayPosition('uTransforms',i), false, transformArray[i].flatten() );
-    }
-
-    // temp for materials
-    this.gl.uniform4fv(program.u.uColor, [1.0,0.0,0.0,1.0]);
-    this.gl.uniform1f(program.u.uSpecularity, 1.0);
-
-    this.gl.uniformMatrix4fv(program.u.uProjectionMatrix, false, Matrix.I(4).flatten());
-
-
-    // console.log(this.gl.getActiveAttrib(program.program, 0), this.gl.getActiveAttrib(program.program, 1), this.gl.getActiveAttrib(program.program, 2), this.gl.getActiveAttrib(program.program, 3), this.buffers.aUV);
-    this.gl.drawElements(this.gl.TRIANGLES, indexArray.length, this.gl.UNSIGNED_SHORT, 0);
   }
 
   _drawOutDebug () {

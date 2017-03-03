@@ -21,20 +21,21 @@ module.exports = function () {
 
   // put some objects in nyah
   let blob, cone;
-  Object3d.loadFromJSON("test-data/testObj.json", function (objects) {
+  Object3d.loadFromJSON("test-data/testObj.json", function (objects, materials) {
     console.log(objects);
     objects.forEach((o) => scene.addElement(o));
     blob = Object3d.getByName('Blob');
     cone = Object3d.getByName('Cone_Cone.001');
     blob.addChild(cone);
+
     // blob.getElements();
-    scene.drawDebug();
-    requestAnimationFrame(function () {
-      scene.drawDebug();
-      requestAnimationFrame(function () {
-        scene.drawDebug();
-      })
-    })
+    // scene.drawDebug();
+    // requestAnimationFrame(function () {
+    //   scene.drawDebug();
+    //   requestAnimationFrame(function () {
+    //     scene.drawDebug();
+    //   })
+    // })
   });
 
   // fps tracker
@@ -79,7 +80,7 @@ module.exports = function () {
       scene.drawDebug();
       updateFPSDebug(deltaTime);
     }
-    // requestAnimationFrame(loop);
+    requestAnimationFrame(loop);
     loopLastTime = performance.now();
   })();
 }

@@ -36,11 +36,11 @@ describe('extendObject', function () {
   it('can extend using several objects without affecting any except the first', function () {
     console.log("!!!!!!!!!!!!!!!!!!!!");
     let toAffect = { a: 0, b: 1 }
-    let extender1 = { a: 1, c: [0] }
-    let extender2 = { c: [1], d: 1 }
+    let extender1 = { a: 1, c: [0], d: { x: 0 } }
+    let extender2 = { c: [1], d: { x: 1 } }
     extendObject(toAffect, extender1, extender2);
-    expect(toAffect).to.eql({a:1,b:1,c:[1],d:1});
-    expect(extender1).to.eql({a:1,c:[0]});
-    expect(extender2).to.eql({c:[1],d:1});
+    expect(toAffect).to.eql({a:1,b:1,c:[1],d:{x:1}});
+    expect(extender1).to.eql({a:1,c:[0],d:{x:0}});
+    expect(extender2).to.eql({c:[1],d:{x:1}});
   });
 });

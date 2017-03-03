@@ -25,6 +25,7 @@ const extendObject = require('lib/extendObject');
 const AjaxRequest = require('lib/AjaxRequest');
 const WorldPositionable = require('lib/gl/3d/WorldPositionable');
 const Mesh = require('lib/gl/3d/Mesh');
+const Material = require('lib/gl/3d/Material');
 const Matrix = require('lib/math/Matrix');
 
 const DEFAULTS = {
@@ -101,11 +102,13 @@ class Object3d extends WorldPositionable {
       indices: []
     }
     this.meshes.forEach((m) => {
-      let mOffset = offset + (data.positions.length / 3);
-      data.positions = data.positions.concat(m.positions);
-      data.uvs = data.uvs.concat(m.uvs);
-      data.normals = data.normals.concat(m.normals);
-      data.indices = data.indices.concat(m.indices.map((i) => i + mOffset));
+      if (!mtl || (mtl === m.mtl)) {
+        let mOffset = offset + (data.positions.length / 3);
+        data.positions = data.positions.concat(m.positions);
+        data.uvs = data.uvs.concat(m.uvs);
+        data.normals = data.normals.concat(m.normals);
+        data.indices = data.indices.concat(m.indices.map((i) => i + mOffset));
+      }
     });
 
     return data;
@@ -167,10 +170,17 @@ class Object3d extends WorldPositionable {
           })(data.objects[o]);
         }
 
-        callback(objects);
+        let materials = [];
+        for (let m = 0, len = data.materials.length; m < len; m++) {
+          (function (matData) {
+            materials.push(new Material(matData));
+          })(data.materials[m]);
+        }
+
+        callback(objects, materials);
       },
       error: function () {
-        callback(null);
+        callback([], []);
       }
     });
   }

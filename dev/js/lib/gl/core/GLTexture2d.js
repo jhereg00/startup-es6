@@ -78,6 +78,7 @@ class GLTexture2d {
 
     // check that the image is loaded first (assuming there is one)
     if (this.image && this.image instanceof HTMLImageElement && !this.image.complete) {
+      this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.format, this._width, this._height, 0, this.format, this.dataType, null);
       this.image.addEventListener('load',(function (e) {
         this.setImage(this.image);
       }).bind(this));
