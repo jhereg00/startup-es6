@@ -7,7 +7,7 @@ const GLTexture2d = require('lib/gl/core/GLTexture2d');
 
 class GLTextureFloat extends GLTexture2d {
   constructor (gl, options) {
-    let ext = gl.getExtension('OES_texture_float');
+    let ext = gl.getExtension('OES_texture_float') || (gl.rawgl && gl.rawgl.getExtension('OES_texture_float'));
     if (ext)
       options.dataType = gl.FLOAT;
     else

@@ -38,7 +38,7 @@ class GLProgram {
   constructor (gl, options) {//shaders, attributeNames, uniformNames, definitions) {
     this.ready = false;
     this._readyFns = [];
-    if (!gl || !(gl instanceof WebGLRenderingContext)) {
+    if (!window.DEBUG && (!gl || !(gl instanceof WebGLRenderingContext))) {
       throw new Error('GLProgram requires a WebGLRenderingContext as its first argument');
     }
     this.gl = gl;
@@ -70,6 +70,8 @@ class GLProgram {
     this.uniforms = {};
     this.shaders = shaders;
 
+    this._needsRebind = true;
+
     // store arguments for comparison
     let definitionsString = JSON.stringify(options.definitions || {});
     this._passedArguments = options.shaders.join(',') + ';' + definitionsString;
@@ -83,6 +85,19 @@ class GLProgram {
   	}
     this.ready = true;
     this._readyFns.forEach((fn) => fn());
+  }
+  _bindAttributesAndUniforms () {
+    this._attributeNames.forEach((function (name) {
+      this.attributes[name] = this.gl.getAttribLocation(this.program, name);
+
+      // console.log(name, this.attributes[name]);
+      if (this.attributes[name] > -1)
+        this.gl.enableVertexAttribArray(this.attributes[name]);
+    }).bind(this));
+    this._uniformNames.forEach((function (name) {
+      this.uniforms[name] = this.gl.getUniformLocation(this.program, name);
+    }).bind(this));
+    this._needsRebind = false;
   }
 
   addReadyListener (fn) {
@@ -102,6 +117,7 @@ class GLProgram {
       attributes = [attributes];
     }
     this._attributeNames = this._attributeNames.concat(attributes);
+    this._needsRebind = true;
   }
 
   addUniform (uniforms) {
@@ -112,6 +128,7 @@ class GLProgram {
       uniforms = [uniforms];
     }
     this._uniformNames = this._uniformNames.concat(uniforms);
+    this._needsRebind = true;
   }
 
   use () {
@@ -120,14 +137,8 @@ class GLProgram {
     }
 
     this.gl.useProgram(this.program);
-    this._attributeNames.forEach((function (name) {
-      console.log(name);
-      this.attributes[name] = this.gl.getAttribLocation(this.program, name);
-      this.gl.enableVertexAttribArray(this.attributes[name]);
-    }).bind(this));
-    this._uniformNames.forEach((function (name) {
-      this.uniforms[name] = this.gl.getUniformLocation(this.program, name);
-    }).bind(this));
+    // if (this._needsRebind)
+      this._bindAttributesAndUniforms();
 
     let activeProgram = GLProgram.getActive(this.gl);
     if (activeProgram) {

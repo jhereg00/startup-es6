@@ -4,6 +4,7 @@
  * check https://en.wikipedia.org/wiki/Wavefront_.obj_file for basics of the format
  */
 const Stream = require('stream');
+const util = require('util');
 
 const identifiers = {
   object: /^o$/,
@@ -22,13 +23,20 @@ const defaultFaceSettings = {
 
 var ObjParser = function () {
   this.data = [];
+
+  this.objects = {};
+
+  // positions[0]/uvs[0]/normals[0] act as defaults since .obj uses 1-based indices
+  this.positions = [0,0,0];
+  this.uvs = [0,0];
+  this.normals = [0,0,1];
+
+  this.indices = [];
+
   this.activeObject;
   this.activeFaceSettings = {
-    mtl: defaultFaceSettings.mtl,
-    smooth: defaultFaceSettings.smooth
+    mtl: defaultFaceSettings.mtl
   };
-  this.activeFaceGroup = defaultFaceSettings.group;
-  this.indexOffset = 0;
 
   this.stream = new Stream.Transform({
     transform: (function (chunk, encoding, callback) {
@@ -45,13 +53,6 @@ var ObjParser = function () {
     }).bind(this),
     objectMode: true
   });
-
-  // debug helper
-  // this.stream
-  //   .on('error', (err) => console.error(err) )
-  //   .on('finish', function () { console.log('finish transform') })
-  //   .on('close', function () { console.log('close transform') })
-  //   .on('end', () => console.log('end transform'));
 }
 ObjParser.prototype = {
   _parseChunk: function (chunk) {
@@ -61,7 +62,6 @@ ObjParser.prototype = {
     }
   },
   _parseLine: function (line) {
-    // console.log(`line: ${line}`);
     line = line.split(/\s/g);
     if (identifiers.object.test(line[0])) {
       // start new object
@@ -84,83 +84,109 @@ ObjParser.prototype = {
     }
   },
 
+  _getPosition (i) {
+    return this.positions.slice(i*3,i*3+3);
+  },
+  _getUV (i) {
+    return this.uvs.slice(i*2,i*2+2);
+  },
+  _getNormal (i) {
+    return this.normals.slice(i*3,i*3+3);
+  },
 
-  _endCurrentObject: function () {
+  _endCurrentObject () {
     if (this.activeObject) {
+      if (this.activeMesh) {
+        this._endCurrentMesh();
+      }
+      // console.log(util.inspect(this.activeObject, { depth: null }));
       this.data.push(this.activeObject);
-      this.indexOffset += this.activeObject.vertices.length / 3;
     }
     this.activeObject = null;
   },
-  _startNewObject: function (line) {
+  _startNewObject (line) {
     if (this.activeObject) {
       this._endCurrentObject();
     }
     this.activeObject = {
-      name: line[1]
+      name: line[1],
+      meshes: []
+    }
+  },
+
+  _endCurrentMesh () {
+    if (this.activeMesh) {
+      // do the real meshy stuff
+      delete this.activeMesh._indexIds;
+      this.activeObject.meshes.push(this.activeMesh);
+      if (this.activeMesh.positions.length / 3 !== Math.max.apply(undefined, this.activeMesh.indices) + 1) {
+        throw new Error (this.activeMesh.name + " has bad data. Defined " + (this.activeMesh.positions.length / 3) + " vertices, but pointed to " + (Math.max.apply(undefined, this.activeMesh.indices) + 1));
+      }
+    }
+    this.activeMesh = null;
+  },
+  _startNewMesh (name) {
+    if (this.activeMesh) {
+      this._endCurrentMesh();
+    }
+    this.activeMesh = {
+      name: name,
+      mtl: 'default',
+      positions: [],
+      uvs: [],
+      normals: [],
+      indices: [],
+      _indexIds: [],
+      faces: []
     }
   },
 
 
-  _addVertexPosition: function (line) {
-    if (!this.activeObject.vertices) {
-      this.activeObject.vertices = [];
-    }
-    this.activeObject.vertices = this.activeObject.vertices.concat(line.splice(1).map((x) => parseFloat(x,10)));
+  _addVertexPosition (line) {
+    this.positions = this.positions.concat(line.splice(1).map((x) => parseFloat(x,10)));
   },
 
-  _addUV: function (line) {
-    if (!this.activeObject.uvs) {
-      this.activeObject.uvs = [];
-    }
-    this.activeObject.uvs = this.activeObject.uvs.concat(line.splice(1).map((x) => parseFloat(x,10)));
+  _addUV (line) {
+    this.uvs = this.uvs.concat(line.splice(1).map((x) => parseFloat(x,10)));
   },
 
-  _addNormal: function (line) {
-    if (!this.activeObject.normals) {
-      this.activeObject.normals = [];
-    }
-    this.activeObject.normals = this.activeObject.normals.concat(line.splice(1).map((x) => parseFloat(x,10)));
+  _addNormal (line) {
+    this.normals = this.normals.concat(line.splice(1).map((x) => parseFloat(x,10)));
   },
 
-  _changeFaceSetting: function (line) {
+  _changeFaceSetting (line) {
     if (line[0] === 'g') {
-      this.activeFaceGroup = line[1];
+      this._startNewMesh(line[1]);
     }
     else if (line[0] === 'usemtl') {
-      this.activeFaceSettings.mtl = line[1];
-    }
-    else if (line[0] === 's') {
-      this.activeFaceSettings.smooth = line[1] === "1" ? 1 : 0;
+      if (!this.activeMesh) {
+        this._startNewMesh();
+      }
+      this.activeMesh.mtl = line[1];
     }
   },
-  _addFace: function (line) {
-    if (!this.activeObject.faceGroups) {
-      this.activeObject.faceGroups = {};
+  _addFace (line) {
+    let faceIndices = [];
+    for (let i = 1; i < line.length; i++) {
+      let index = this.activeMesh._indexIds.indexOf(line[i]);
+      let attributes = line[i].split(/\//g).map((x) => parseInt(x,10));
+      if (index === -1) {
+        // haven't added this combination yet
+        faceIndices.push(this.activeMesh._indexIds.length);
+        this.activeMesh._indexIds.push(line[i]);
+        this.activeMesh.positions = this.activeMesh.positions.concat(this._getPosition(attributes[0] || 0));
+        this.activeMesh.uvs = this.activeMesh.uvs.concat(this._getUV(attributes[1] || 0));
+        this.activeMesh.normals = this.activeMesh.normals.concat(this._getNormal(attributes[2] || 0));
+      }
+      else {
+        faceIndices.push(index);
+      }
     }
-    if (!this.activeObject.faceGroups[this.activeFaceGroup]) {
-      this.activeObject.faceGroups[this.activeFaceGroup] = {
-        mtl: this.activeFaceSettings.mtl,
-        smooth: this.activeFaceSettings.smooth,
-        faces: []
-      };
+    for (let i = 2; i < faceIndices.length; i++) {
+      this.activeMesh.indices.push(faceIndices[0], faceIndices[i-1], faceIndices[i]);
     }
 
-    let faceVertices = [];
-    let faceUVs = [];
-    let faceNormals = [];
-    for (let i = 1; i < line.length; i++) {
-      let attributes = line[i].split(/\//g).map((x) => parseInt(x,10) - 1);
-      faceVertices.push(attributes[0] - this.indexOffset);
-      faceUVs.push(attributes[1] !== -1 && !isNaN(attributes[1]) ? attributes[1] - this.indexOffset : 0);
-      faceNormals.push(attributes[2] !== -1 && !isNaN(attributes[2]) ? attributes[2] - this.indexOffset : 0);
-    }
-    let face = {
-      vertex: faceVertices,
-      uv: faceUVs,
-      normal: faceNormals
-    }
-    this.activeObject.faceGroups[this.activeFaceGroup].faces.push(face);
+    this.activeMesh.faces.push(faceIndices);
   }
 }
 

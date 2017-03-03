@@ -8,6 +8,9 @@
  *
  * @param {object} options
  *   @param {string} name
+ *   @param {Mesh[]} meshes
+ *   @param {WorldPositionable[]} children
+ *   @param {boolean} castsShadows
  *
  * @prop {string} name - although supported, it is not highly recommended that you change this property after creation
  *
@@ -26,7 +29,7 @@ const Matrix = require('lib/math/Matrix');
 
 const DEFAULTS = {
   name: null,
-  mesh: null,
+  meshes: [],
   children: [],
   castsShadows: true
 };
@@ -42,8 +45,14 @@ class Object3d extends WorldPositionable {
     if (!options.name) {
       options.name = "_generated." + generatedIndex++;
     }
+    if (options.mesh && !options.meshes) {
+      options.meshes = [options.mesh];
+      delete options.mesh;
+    }
 
-    extendObject(this, DEFAULTS, options);
+    let settings = {};
+    extendObject(settings, DEFAULTS, options);
+    extendObject(this, settings);
 
     // create base transform matrices
     this._modelScaleMatrix = Matrix.I(4);
@@ -64,21 +73,42 @@ class Object3d extends WorldPositionable {
   /////////////////////////
   // public methods
   /////////////////////////
-  getTris (...args) {
-    return this.mesh ? this.mesh.getTris(...args) : [];
-  }
-  getTrisByMaterial (...args) {
-    return this.mesh ? this.mesh.getTrisByMaterial(...args) : [];
-  }
-  getElements (...args) {
-    return this.mesh ? this.mesh.getElements(...args) : {
-      data: {
-        position: [],
-        normal: [],
-        uv: []
-      },
+  // getTris (...args) {
+  //   return this.mesh ? this.mesh.getTris(...args) : [];
+  // }
+  // getTrisByMaterial (...args) {
+  //   return this.mesh ? this.mesh.getTrisByMaterial(...args) : [];
+  // }
+  // getElements (...args) {
+  //   return this.mesh ? this.mesh.getElements(...args) : {
+  //     data: {
+  //       position: [],
+  //       normal: [],
+  //       uv: []
+  //     },
+  //     indices: []
+  //   };
+  // }
+  getElements (mtl, offset = 0) {
+    if (typeof mtl === 'number') {
+      offset = mtl;
+      mtl = null;
+    }
+    let data = {
+      positions: [],
+      uvs: [],
+      normals: [],
       indices: []
-    };
+    }
+    this.meshes.forEach((m) => {
+      let mOffset = offset + (data.positions.length / 3);
+      data.positions = data.positions.concat(m.positions);
+      data.uvs = data.uvs.concat(m.uvs);
+      data.normals = data.normals.concat(m.normals);
+      data.indices = data.indices.concat(m.indices.map((i) => i + mOffset));
+    });
+
+    return data;
   }
 
   /////////////////////////
@@ -123,13 +153,24 @@ class Object3d extends WorldPositionable {
 
         let objects = [];
         for (let o = 0, len = data.objects.length; o < len; o++) {
-          objects.push(new Object3d ({
-            name: data.objects[o].name,
-            mesh: new Mesh(data.objects[o])
-          }));
+          (function (objData) {
+            let meshes = [];
+            for (let m = 0, len = data.objects[o].meshes.length; m < len; m++) {
+              let meshData = data.objects[o].meshes[m];
+              meshes.push(new Mesh (meshData));
+            }
+            let obj = new Object3d ({
+              name: data.objects[o].name,
+              meshes: meshes
+            });
+            objects.push(obj);
+          })(data.objects[o]);
         }
 
         callback(objects);
+      },
+      error: function () {
+        callback(null);
       }
     });
   }

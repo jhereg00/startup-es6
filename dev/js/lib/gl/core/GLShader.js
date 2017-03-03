@@ -34,7 +34,7 @@ class GLShader {
   constructor (gl, options) {
     this.ready = false;
     this._readyFns = [];
-    if (!gl || !(gl instanceof WebGLRenderingContext)) {
+    if (!window.DEBUG && (!gl || !(gl instanceof WebGLRenderingContext))) {
       throw new Error('GLShader requires a WebGLRenderingContext as its first argument');
     }
 

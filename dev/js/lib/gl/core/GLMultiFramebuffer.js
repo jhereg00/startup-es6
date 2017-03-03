@@ -24,7 +24,10 @@ class GLMultiFramebuffer extends GLFramebuffer {
   }
   // @override _createAndAttachTexture
   _createAndAttachTexture () {
-    this._ext = this.gl.getExtension('WEBGL_draw_buffers');
+    this._ext = this.gl.getExtension('WEBGL_draw_buffers') || (this.gl.rawgl && this.gl.rawgl.getExtension('WEBGL_draw_buffers'));
+    if (!this._ext) {
+      throw new Error("Extension WEBGL_draw_buffers not supported");
+    }
 
     this.textures = [];
     this._bindArray = [];

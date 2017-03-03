@@ -16,7 +16,7 @@ const DEFAULTS = {
 
 class GLFramebuffer {
   constructor (gl, options) {
-    if (!gl || !(gl instanceof WebGLRenderingContext)) {
+    if (!window.DEBUG && (!gl || !(gl instanceof WebGLRenderingContext))) {
       throw new Error(this.constructor.name + ' requires a WebGLRenderingContext as its first argument');
       return false;
     }

@@ -29,17 +29,18 @@ class Scene3d extends GLScene {
     this._lights = [];
 
     // check that we have the extension to use GBuffer
-    let drawBuffersExtension = this.gl.getExtension('WEBGL_draw_buffers');
-    if (!drawBuffersExtension) {
-      // TODO: create fallback drawing program
-      throw new Error('platform does not support WEBGL_draw_buffers');
-    }
+    // let drawBuffersExtension = this.gl.getExtension('WEBGL_draw_buffers');
+    // if (!drawBuffersExtension) {
+    //   // TODO: create fallback drawing program
+    //   throw new Error('platform does not support WEBGL_draw_buffers');
+    // }
   }
 
   // initialization functions
   initializePrograms () {
     // only define the output programs here
     // the gBuffer programs are defined by the addition of objects
+    console.log(this.gl);
     this.programs = {
       out: new GLProgram(this.gl, {
         shaders: ['/glsl/out.vs.glsl','/glsl/out.fs.glsl'],
@@ -115,25 +116,25 @@ class Scene3d extends GLScene {
     for (let o = 0, len = this._objects.length; o < len; o++) {
       let obj = this._objects[o];
       let objElements = obj.getElements(offset);
-      console.log(objElements, Math.max.apply(undefined,objElements.indices), objElements.data.position.length / 3);
-      positionArray = positionArray.concat(objElements.data.position);
-      uvArray = uvArray.concat(objElements.data.uv);
-      normalArray = normalArray.concat(objElements.data.normal);
-      transformIndexArray.push(transformArray.length);
+      positionArray = positionArray.concat(objElements.positions);
+      uvArray = uvArray.concat(objElements.uvs);
+      normalArray = normalArray.concat(objElements.normals);
+      transformIndexArray = transformIndexArray.concat(new Array(objElements.positions.length / 3).fill(transformArray.length));
       transformArray.push(obj.mvMatrix, obj.normalMatrix);
       indexArray = indexArray.concat(objElements.indices);
       offset = positionArray.length / 3;
+      // console.log(objElements, Math.max.apply(undefined,objElements.indices), offset);
     }
 
     // assign indices as attributes
-    this.buffers.aPosition.bindData(program.a.aPosition, positionArray);
-    this.buffers.aNormal.bindData(program.a.aNormal, normalArray);
-    // this.buffers.aUV.bindData(program.a.aUV, uvArray);
-    this.buffers.aTransform.bindData(program.a.aTransform, transformIndexArray);
+    this.buffers.aPosition.bindData(program.a.aPosition, positionArray, this.gl.DYNAMIC_DRAW);
+    this.buffers.aNormal.bindData(program.a.aNormal, normalArray, this.gl.DYNAMIC_DRAW);
+    this.buffers.aUV.bindData(program.a.aUV, uvArray);
+    this.buffers.aTransform.bindData(program.a.aTransform, transformIndexArray, this.gl.STATIC_DRAW);
     // element indices is entirely incremental
-    this.buffers.elements.bindData(indexArray);
+    this.buffers.elements.bindData(indexArray, this.gl.DYNAMIC_DRAW);
 
-    console.log(Math.max.apply(undefined, indexArray), positionArray.length / 3, uvArray.length / 2, normalArray.length / 2, transformIndexArray.length);
+    // console.log(Math.max.apply(undefined, indexArray), positionArray.length / 3, uvArray.length / 2, normalArray.length / 3, transformIndexArray.length);
 
     // assign actual data as uniforms
     for (let i = 0, len = transformArray.length; i < len; i++) {
@@ -146,7 +147,9 @@ class Scene3d extends GLScene {
 
     this.gl.uniformMatrix4fv(program.u.uProjectionMatrix, false, Matrix.I(4).flatten());
 
-    this.gl.drawElements(this.gl.TRIANGLES, 54, this.gl.UNSIGNED_SHORT, 0);
+
+    // console.log(this.gl.getActiveAttrib(program.program, 0), this.gl.getActiveAttrib(program.program, 1), this.gl.getActiveAttrib(program.program, 2), this.gl.getActiveAttrib(program.program, 3), this.buffers.aUV);
+    this.gl.drawElements(this.gl.TRIANGLES, indexArray.length, this.gl.UNSIGNED_SHORT, 0);
   }
 
   _drawOutDebug () {
@@ -165,8 +168,8 @@ class Scene3d extends GLScene {
     this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
     this.gl.viewport(0,0,this.width,this.height);
     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
-    this.buffers.elements.bindData([0,1,2,0,2,3]);
-    this.buffers.aUV.bindData(this.programs.out.a.aUV, [0,1,1,1,1,0,0,0]);
+    this.buffers.elements.bindData([0,1,2,0,2,3], this.gl.STATIC_DRAW);
+    this.buffers.aUV.bindData(this.programs.out.a.aUV, [0,1,1,1,1,0,0,0], this.gl.STATIC_DRAW);
     this.gl.activeTexture(this.gl.TEXTURE0);
     this.gl.uniform1i(this.programs.out.u.uColorTexture, 0);
 
@@ -174,12 +177,14 @@ class Scene3d extends GLScene {
     for (let i = 0; i < outputFrames; i++) {
       let x = (i % sizeDivider) / sizeDivider * 2 - 1;
       let y = -1 * (Math.floor(i / sizeDivider) / sizeDivider * 2 - 1);
-      this.buffers.aPositionOut.bindData(this.programs.out.a.aPosition, [
+      let positionArray = [
         x, y,
         x + size, y,
         x + size, y - size,
         x, y - size
-      ]);
+      ];
+
+      this.buffers.aPositionOut.bindData(this.programs.out.a.aPosition, positionArray, this.gl.DYNAMIC_DRAW);
 
       if (i < outputFrames - 1) {
         this.framebuffers.gBuffer.textures[i].bind();
@@ -188,7 +193,7 @@ class Scene3d extends GLScene {
         this.framebuffers.lightingBuffer.texture.bind();
       }
 
-      // this.gl.drawElements(this.gl.TRIANGLES, 6, this.gl.UNSIGNED_SHORT, 0);
+      this.gl.drawElements(this.gl.TRIANGLES, 6, this.gl.UNSIGNED_SHORT, 0);
     }
   }
 
@@ -203,7 +208,7 @@ class Scene3d extends GLScene {
     //this._drawCompiled();
 
     // clear the framebuffer, drawing to the canvas this time
-    this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
+    // this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
     this._drawOutDebug();
   }
 

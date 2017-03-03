@@ -28,7 +28,7 @@
 // class
 class GLBuffer {
   constructor (gl, options) {
-    if (!gl || !(gl instanceof WebGLRenderingContext)) {
+    if (!window.DEBUG && (!gl || !(gl instanceof WebGLRenderingContext))) {
       throw new Error(this.constructor.name + ' requires a WebGLRenderingContext as its first argument');
       return false;
     }
@@ -53,12 +53,14 @@ class GLBuffer {
     this.gl.bindBuffer(this.type, this.buffer);
   }
   bindToAttribute (position) {
+    if (position < 0)
+      return false;
     this.bind();
     this.gl.vertexAttribPointer(
       position,
       this.attributeSettings.size,
       this.attributeSettings.type,
-      this.attributeSettings.normalized,
+      this.attributeSettings.normalized || this.gl.FALSE,
       this.attributeSettings.stride,
       this.attributeSettings.offset
     );
@@ -73,7 +75,7 @@ class GLBuffer {
         data = new Float32Array(data);
       }
     }
-    this.gl.bufferData(this.type, data, drawType || this.gl.STATIC_DRAW);
+    this.gl.bufferData(this.type, data, drawType || this.gl.DYNAMIC_DRAW);
   }
 }
 

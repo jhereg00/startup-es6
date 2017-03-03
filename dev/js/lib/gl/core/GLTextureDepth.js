@@ -7,7 +7,7 @@ const GLTexture2d = require('lib/gl/core/GLTexture2d');
 
 class GLTextureDepth extends GLTexture2d {
   constructor (gl, options) {
-    let ext = gl.getExtension('WEBGL_depth_texture');
+    let ext = gl.getExtension('WEBGL_depth_texture') || (gl.rawgl && gl.rawgl.getExtension('WEBGL_depth_texture'));
     if (ext) {
       options.format = gl.DEPTH_COMPONENT;
       options.dataType = gl.UNSIGNED_SHORT;
