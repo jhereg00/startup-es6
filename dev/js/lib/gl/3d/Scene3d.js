@@ -77,14 +77,8 @@ class Scene3d extends GLScene {
         shaders: ['/glsl/out.vs.glsl','/glsl/lighting.fs.glsl'],
         attributes: ['aPosition','aUV'],
         uniforms: ['uNormalTexture','uPositionTexture','uColorTexture','uSpecularityTexture','uLights','uNumLights','uCameraPosition','uShadowCube']
-      },
-      material: {
-        shaders: ['/glsl/object.vs.glsl','/glsl/object.fs.glsl'],
-        attributes: ['aPosition','aNormal','aUV','aTransform'],
-        uniforms: ['uProjectionMatrix','uTransform','uNormalTransform','uAmbient','uDiffuse','uDiffuseMap','uSpecular','uSpecularMap','uSpecularExponent','uSpecularExponentMap']
       }
     };
-    this._materialPrograms = {};
   }
 
   initializeBuffers () {
@@ -94,11 +88,8 @@ class Scene3d extends GLScene {
     }
 
     this.buffers = {
-      aPosition: new GLArrayBuffer(this.gl),
-      aNormal: new GLArrayBuffer(this.gl),
       elements: new GLElementArrayBuffer(this.gl),
       aUV: new GLArrayBuffer(this.gl, { attributeSize: 2 }),
-      aTransform: new GLArrayBuffer(this.gl, { attributeSize: 1 }),
       aPositionOut: new GLArrayBuffer(this.gl, { attributeSize: 2 })
     }
     this.framebuffers = {
@@ -116,89 +107,6 @@ class Scene3d extends GLScene {
       lightingBuffer: new GLFramebuffer(this.gl, { size: fboSize })
     }
     this.nullMap = new GLTexture2d (this.gl);
-  }
-
-  __drawObjects () {
-    this.framebuffers.gBuffer.use();
-    this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
-    let allMtls = Material.getAll();
-    for (let mtl in allMtls) {
-      let material = allMtls[mtl];
-      // get our data first to see if we even need to mess with a program
-      let positionArray = [];
-      let uvArray = [];
-      let normalArray = [];
-      let transformIndexArray = [];
-      let transformArray = [];
-      let indexArray = [];
-      let offset = 0;
-      for (let o = 0, len = this._objects.length; o < len; o++) {
-        let obj = this._objects[o];
-        let objElements = obj.getElements(mtl, offset);
-        positionArray = positionArray.concat(objElements.positions);
-        uvArray = uvArray.concat(objElements.uvs);
-        normalArray = normalArray.concat(objElements.normals);
-        transformIndexArray = transformIndexArray.concat(new Array(objElements.positions.length / 3).fill(transformArray.length));
-        transformArray.push(obj.mvMatrix, obj.normalMatrix);
-        indexArray = indexArray.concat(objElements.indices);
-        offset = positionArray.length / 3;
-        // console.log(objElements, Math.max.apply(undefined,objElements.indices), offset);
-      }
-
-      // make sure some mesh uses this, else bail
-      if (!indexArray.length)
-        continue;
-
-      let programSettings = extendObject({},this.dynamicProgramSettings.material,{definitions: allMtls[mtl].getProgramDefinitions()});
-      let program = GLProgram.getBy(this.gl, programSettings);
-      if (!program) {
-        program = new GLProgram(this.gl, programSettings);
-      }
-
-      if (!program.ready)
-        return false;
-
-      program.use();
-
-      // assign indices as attributes
-      this.buffers.aPosition.bindData(program.a.aPosition, positionArray, this.gl.DYNAMIC_DRAW);
-      this.buffers.aNormal.bindData(program.a.aNormal, normalArray, this.gl.DYNAMIC_DRAW);
-      this.buffers.aUV.bindData(program.a.aUV, uvArray, this.gl.DYNAMIC_DRAW);
-      this.buffers.aTransform.bindData(program.a.aTransform, transformIndexArray, this.gl.STATIC_DRAW);
-      this.buffers.elements.bindData(indexArray, this.gl.DYNAMIC_DRAW);
-
-      // assign actual data as uniforms
-      for (let i = 0, len = transformArray.length; i < len; i++) {
-        this.gl.uniformMatrix4fv( program.getArrayPosition('uTransforms',i), false, transformArray[i].flatten() );
-      }
-
-      // assign material stuff
-      this.gl.uniform4fv(program.u.uAmbient, material.ambient.toFloatArray());
-      this.gl.uniform4fv(program.u.uDiffuse, material.diffuse.toFloatArray());
-      this.gl.uniform4fv(program.u.uSpecular, material.specular.toFloatArray());
-      this.gl.uniform1f(program.u.uSpecularExponent, material.specularExponent);
-
-      this.gl.uniformMatrix4fv(program.u.uProjectionMatrix, false, Matrix.I(4).flatten());
-
-      // handle textures
-      let texData = material.getGLTextures(this.gl);
-
-      this.gl.activeTexture(this.gl.TEXTURE0);
-      if (texData.diffuseMap) texData.diffuseMap.bind();
-      this.gl.uniform1i(this.programs.out.u.uDiffuseMap, 0);
-      this.gl.activeTexture(this.gl.TEXTURE1);
-      if (texData.specularMap) texData.specularMap.bind();
-      this.gl.uniform1i(this.programs.out.u.uSpecularMap, 1);
-      this.gl.activeTexture(this.gl.TEXTURE2);
-      if (texData.specularExponentMap) texData.specularExponentMap.bind();
-      this.gl.uniform1i(this.programs.out.u.uSpecularExponentMap, 2);
-      this.gl.activeTexture(this.gl.TEXTURE3);
-      if (texData.normalMap) texData.normalMap.bind();
-      this.gl.uniform1i(this.programs.out.u.uNormalMap, 3);
-
-      // console.log(this.gl.getActiveAttrib(program.program, 0), this.gl.getActiveAttrib(program.program, 1), this.gl.getActiveAttrib(program.program, 2), this.gl.getActiveAttrib(program.program, 3), this.buffers.aUV);
-      this.gl.drawElements(this.gl.TRIANGLES, indexArray.length, this.gl.UNSIGNED_SHORT, 0);
-    }
   }
 
   _bindMaterialUniforms (program, material) {
@@ -242,7 +150,11 @@ class Scene3d extends GLScene {
     program.use();
     this.framebuffers.gBuffer.use();
     // camera projection matrix
-    this.gl.uniformMatrix4fv(program.u.uProjectionMatrix, false, Matrix.I(4).flatten());
+    if (this.activeCamera)
+      this.gl.uniformMatrix4fv(program.u.uProjectionMatrix, false, this.activeCamera.projectionMatrixFlat);
+    else
+      this.gl.uniformMatrix4fv(program.u.uProjectionMatrix, false, Matrix.I(4).flatten());
+
     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 
     this._objects.forEach((function (object) {
@@ -257,15 +169,6 @@ class Scene3d extends GLScene {
         // get material and program for meshes in order
         let material = Material.getByName(buffers.mtls[i]);
 
-        // let programSettings = extendObject({},this.dynamicProgramSettings.material,{definitions: material.getProgramDefinitions()});
-        // let program = GLProgram.getBy(this.gl, programSettings);
-        // if (!program) {
-        //   program = new GLProgram(this.gl, programSettings);
-        // }
-        // if (!program.ready)
-        //   continue;
-        //
-        // program.use();
         this._bindMaterialUniforms(program, material);
         buffers.elementBuffers[i].bind();
 
@@ -342,6 +245,11 @@ class Scene3d extends GLScene {
     if (el instanceof Object3d) {
       this._objects.push(el);
     }
+  }
+
+  setActiveCamera (cam) {
+    this.activeCamera = cam;
+    return this;
   }
 }
 

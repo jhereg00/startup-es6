@@ -78,46 +78,6 @@ class Object3d extends WorldPositionable {
   /////////////////////////
   // public methods
   /////////////////////////
-  // getTris (...args) {
-  //   return this.mesh ? this.mesh.getTris(...args) : [];
-  // }
-  // getTrisByMaterial (...args) {
-  //   return this.mesh ? this.mesh.getTrisByMaterial(...args) : [];
-  // }
-  // getElements (...args) {
-  //   return this.mesh ? this.mesh.getElements(...args) : {
-  //     data: {
-  //       position: [],
-  //       normal: [],
-  //       uv: []
-  //     },
-  //     indices: []
-  //   };
-  // }
-  getElements (mtl, offset = 0) {
-    if (typeof mtl === 'number') {
-      offset = mtl;
-      mtl = null;
-    }
-    let data = {
-      positions: [],
-      uvs: [],
-      normals: [],
-      indices: []
-    }
-    this.meshes.forEach((m) => {
-      if (!mtl || (mtl === m.mtl)) {
-        let mOffset = offset + (data.positions.length / 3);
-        data.positions = data.positions.concat(m.positions);
-        data.uvs = data.uvs.concat(m.uvs);
-        data.normals = data.normals.concat(m.normals);
-        data.indices = data.indices.concat(m.indices);//.map((i) => i + mOffset));
-      }
-    });
-
-    return data;
-  }
-
   _buildBufferSet (gl) {
     let positionBuffer = new GLArrayBuffer (gl);
     let normalBuffer = new GLArrayBuffer (gl);
@@ -133,7 +93,6 @@ class Object3d extends WorldPositionable {
     let uvData = [];
     this.meshes.forEach(function (mesh) {
       // build an element buffer
-      console.log("buffer's highest index: " + Math.max.apply(undefined,mesh.indices), "buffer's points: " + mesh.positions.length / 3);
       let ebo = new GLElementArrayBuffer (gl);
       ebo.bindData(mesh.indices.map((i) => i + (positionData.length / 3)));
       elementBuffers.push(ebo);
@@ -145,7 +104,6 @@ class Object3d extends WorldPositionable {
       normalData = normalData.concat(mesh.normals);
       uvData = uvData.concat(mesh.uvs);
     });
-    console.log("built buffers. " + (positionData.length / 3) + " points, " + Math.max.apply(undefined, elementData) + " expected");
     positionBuffer.bindData(positionData);
     normalBuffer.bindData(normalData);
     uvBuffer.bindData(uvData);

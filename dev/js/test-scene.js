@@ -6,7 +6,8 @@
 
 // get the things we're playing with
 const Scene3d = require('lib/gl/3d/Scene3d'),
-      Object3d = require('lib/gl/3d/Object3d')
+      Object3d = require('lib/gl/3d/Object3d'),
+      PerspectiveCamera = require('lib/gl/3d/PerspectiveCamera')
       ;
 
 module.exports = function () {
@@ -18,6 +19,12 @@ module.exports = function () {
   // initialize a new scene
   let scene = new Scene3d ();
   scene.addTo(document.getElementById('canvasContainer'));
+
+  let primaryCamera = new PerspectiveCamera ({
+    aspectRatio: scene.width / scene.height
+  });
+  primaryCamera.moveTo(0,0,3);
+  scene.setActiveCamera(primaryCamera);
 
   // put some objects in nyah
   let blob, cone;
@@ -79,6 +86,7 @@ module.exports = function () {
 
     if (deltaTime > 0 && performance.now() > loopStartTime) {
       cone.rotateBy(0,0,coneRotationSpeed * (deltaTime / 1000));
+      // primaryCamera.rotateBy(0,coneRotationSpeed * (deltaTime / 1000), 0);
       scene.drawDebug();
       // updateFPSDebug(deltaTime);
     }
