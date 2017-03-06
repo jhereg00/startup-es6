@@ -23,6 +23,14 @@ class Color {
         r: r[0]
       }
     }
+    else if (r instanceof Object) {
+      values = extendObject({
+        r: 0,
+        g: 0,
+        b: 0,
+        a: 1
+      }, r);
+    }
     // check if passed a hex
     // if r is a number and g is undefined, probably passed a 0xffffff style hex
     else if ((typeof r === 'string' && /^(0x|#)?([a-f0-9]{3}){1,2}$/i.test(r)) ||

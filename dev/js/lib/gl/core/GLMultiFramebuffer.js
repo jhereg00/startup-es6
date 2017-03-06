@@ -9,10 +9,12 @@ const GLTextureDepth = require('lib/gl/core/GLTextureDepth');
 
 const DEFAULTS = {
   textureNames: [
-    'color',
+    'ambient',
+    'diffuse',
+    'specular',
     'normal',
     'position',
-    'specularity'
+    'specularExponent'
   ]
 }
 

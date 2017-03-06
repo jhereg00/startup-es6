@@ -13,6 +13,7 @@ const GLTexture2d = require('lib/gl/core/GLTexture2d');
 const Matrix = require('lib/math/Matrix');
 const Object3d = require('lib/gl/3d/Object3d');
 const Material = require('lib/gl/3d/Material');
+const Light = require('lib/gl/3d/Light');
 const extendObject = require('lib/extendObject');
 
 const DEFAULTS = {
@@ -70,14 +71,22 @@ class Scene3d extends GLScene {
           SPECULAR_EXPONENT_MAP: 1,
           NORMAL_MAP: 1
         }
-      })
-    };
-    this.dynamicProgramSettings = {
-      lighting: {
+      }),
+      lighting: new GLProgram(this.gl, {
         shaders: ['/glsl/out.vs.glsl','/glsl/lighting.fs.glsl'],
         attributes: ['aPosition','aUV'],
-        uniforms: ['uNormalTexture','uPositionTexture','uColorTexture','uSpecularityTexture','uLights','uNumLights','uCameraPosition','uShadowCube']
-      }
+        uniforms: [
+          'uNormalTexture',
+          'uPositionTexture',
+          'uAmbientTexture',
+          'uDiffuseTexture',
+          'uSpecularTexture',
+          'uSpecularExponentTexture',
+          'uLights','uNumLights','uCameraPosition'],
+        definitions: {
+          MAX_LIGHTS: 10
+        }
+      })
     };
   }
 
@@ -180,6 +189,52 @@ class Scene3d extends GLScene {
     }).bind(this));
   }
 
+  _drawLighting () {
+    // shadows would go here...
+
+    // lighting time!
+    let program = this.programs.lighting;
+    if (!program.ready)
+      return;
+    program.use();
+    this.framebuffers.lightingBuffer.use();
+
+    this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+
+    this.buffers.elements.bindData([0,1,2,0,2,3]);
+    this.buffers.aPositionOut.bindDataToPosition(program.a.aPosition, [-1,-1,1,-1,1,1,-1,1]);
+    this.buffers.aUV.bindDataToPosition(program.a.aUV, [0,0,1,0,1,1,0,1]);
+
+    // bind our lights
+    let i = 0;
+    for (let len = this._lights.length; i < len && i < 10; i++) {
+      this.gl.uniform3fv(  program.getStructPosition('uLights',i,'position'),           this._lights[i].positionArray                    );
+      this.gl.uniform4fv(  program.getStructPosition('uLights',i,'diffuse'),            this._lights[i].diffuse.toFloatArray()           );
+      this.gl.uniform4fv(  program.getStructPosition('uLights',i,'ambient'),            this._lights[i].ambient.toFloatArray()           );
+      this.gl.uniform4fv(  program.getStructPosition('uLights',i,'specular'),           this._lights[i].specular.toFloatArray()          );
+      this.gl.uniform1f(   program.getStructPosition('uLights',i,'diffuseIntensity'),   this._lights[i].diffuseIntensity                 );
+      this.gl.uniform1f(   program.getStructPosition('uLights',i,'ambientIntensity'),   this._lights[i].ambientIntensity                 );
+      this.gl.uniform1f(   program.getStructPosition('uLights',i,'specularIntensity'),  this._lights[i].specularIntensity                );
+      this.gl.uniform1f(   program.getStructPosition('uLights',i,'radius'),             this._lights[i].radius                           );
+      this.gl.uniform1f(   program.getStructPosition('uLights',i,'falloffStart'),       this._lights[i].falloffStart                     );
+      this.gl.uniform1f(   program.getStructPosition('uLights',i,'bias'),               this._lights[i].bias                             );
+    };
+    this.gl.uniform1i(program.u.uNumLights, i);
+
+    this.framebuffers.gBuffer.textures.forEach((function (t, i) {
+      this.gl.activeTexture(this.gl['TEXTURE' + i]);
+      // console.log('u' + (this.framebuffers.gBuffer.textureNames[i].replace(/^\w/,($0) => $0.toUpperCase())) + 'Texture', i, this.gl.getParameter(this.gl.ACTIVE_TEXTURE))
+      t.bind();
+      this.gl.uniform1i(
+        program.u['u' + (this.framebuffers.gBuffer.textureNames[i].replace(/^\w/,($0) => $0.toUpperCase())) + 'Texture'],
+        i);
+    }).bind(this));
+
+    this.gl.uniform3fv(program.u.uCameraPosition, new Float32Array([this.activeCamera.position.x, this.activeCamera.position.y, this.activeCamera.position.z]));
+
+    this.gl.drawElements(this.gl.TRIANGLES, 6, this.gl.UNSIGNED_SHORT, 0);
+  }
+
   _drawOutDebug () {
     // determine how many textures we have...
     let outputFrames = this.framebuffers.gBuffer.textures.length + 1;
@@ -232,7 +287,7 @@ class Scene3d extends GLScene {
     this.gl.clearColor(this.backgroundColor.r, this.backgroundColor.g, this.backgroundColor.b, this.backgroundColor.a);
     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
     this._drawObjects();
-    // this._drawLighting();
+    this._drawLighting();
     //this._drawCompiled();
 
     // clear the framebuffer, drawing to the canvas this time
@@ -244,6 +299,9 @@ class Scene3d extends GLScene {
     // TODO: find a clean way to automatically add children, even if they are added to objects already in the scene
     if (el instanceof Object3d) {
       this._objects.push(el);
+    }
+    else if (el instanceof Light) {
+      this._lights.push(el);
     }
   }
 

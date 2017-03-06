@@ -7,7 +7,10 @@
 // get the things we're playing with
 const Scene3d = require('lib/gl/3d/Scene3d'),
       Object3d = require('lib/gl/3d/Object3d'),
-      PerspectiveCamera = require('lib/gl/3d/PerspectiveCamera')
+      Material = require('lib/gl/3d/Material'),
+      PerspectiveCamera = require('lib/gl/3d/PerspectiveCamera'),
+      Light = require('lib/gl/3d/Light'),
+      Color = require('lib/Color')
       ;
 
 module.exports = function () {
@@ -26,6 +29,13 @@ module.exports = function () {
   primaryCamera.moveTo(0,0,3);
   scene.setActiveCamera(primaryCamera);
 
+  let ambientLight = new Light ({
+    ambient: new Color (40,40,70,1),
+    diffuse: new Color (255,255,255,1)
+  });
+  ambientLight.moveTo(2,5,2);
+  scene.addElement(ambientLight);
+
   // put some objects in nyah
   let blob, cone;
   Object3d.loadFromJSON("test-data/testObj.json", function (objects, materials) {
@@ -35,6 +45,7 @@ module.exports = function () {
     cone = Object3d.getByName('Cone_Cone.001');
     blob.addChild(cone);
 
+    Material.getByName('blobMtl.001').ambient = new Color(70,70,200,1);
     // blob.getElements();
     // scene.drawDebug();
     // requestAnimationFrame(function () {
@@ -87,6 +98,7 @@ module.exports = function () {
     if (deltaTime > 0 && performance.now() > loopStartTime) {
       cone.rotateBy(0,0,coneRotationSpeed * (deltaTime / 1000));
       // primaryCamera.rotateBy(0,coneRotationSpeed * (deltaTime / 1000), 0);
+      blob.scaleTo(Math.sin((performance.now() - loopStartTime) / 2000) * .25 + 1,1,1);
       scene.drawDebug();
       // updateFPSDebug(deltaTime);
     }
