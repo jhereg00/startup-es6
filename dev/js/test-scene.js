@@ -10,7 +10,7 @@ const Scene3d = require('lib/gl/3d/Scene3d'),
       ;
 
 module.exports = function () {
-  const TARGET_FPS = 45;
+  const TARGET_FPS = 30;
   const FPS_DELAY = 1000; // time before we start counting FPS
 
   console.log('--------START TEST SCENE OUTPUT-------');
@@ -70,6 +70,7 @@ module.exports = function () {
   }
   let loopStartTime = performance.now() + FPS_DELAY;
   let loopLastTime = performance.now();
+  let coneRotationSpeed = Math.PI / 2;
 
   // animation
   (function loop () {
@@ -77,8 +78,9 @@ module.exports = function () {
 
 
     if (deltaTime > 0 && performance.now() > loopStartTime) {
+      cone.rotateBy(0,0,coneRotationSpeed * (deltaTime / 1000));
       scene.drawDebug();
-      updateFPSDebug(deltaTime);
+      // updateFPSDebug(deltaTime);
     }
     requestAnimationFrame(loop);
     loopLastTime = performance.now();

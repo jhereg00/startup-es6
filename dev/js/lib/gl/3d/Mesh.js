@@ -8,7 +8,8 @@ const DEFAULTS = {
   positions: new Array(),
   uvs: [0,0],
   normals: [0,0,1],
-  faces: []
+  faces: [],
+  mtl: 'default'
 }
 
 class Mesh {

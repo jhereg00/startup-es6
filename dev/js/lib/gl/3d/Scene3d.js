@@ -9,6 +9,7 @@ const GLArrayBuffer = require('lib/gl/core/GLArrayBuffer');
 const GLElementArrayBuffer = require('lib/gl/core/GLElementArrayBuffer');
 const GLFramebuffer = require('lib/gl/core/GLFramebuffer');
 const GLMultiFramebuffer = require('lib/gl/core/GLMultiFramebuffer');
+const GLTexture2d = require('lib/gl/core/GLTexture2d');
 const Matrix = require('lib/math/Matrix');
 const Object3d = require('lib/gl/3d/Object3d');
 const Material = require('lib/gl/3d/Material');
@@ -52,6 +53,23 @@ class Scene3d extends GLScene {
         shaders: ['/glsl/depth.vs.glsl','/glsl/depth.fs.glsl'],
         attributes: ['aPosition'],
         uniforms: ['uMVMatrix','uProjectionMatrix','uCamPos','uCamRange']
+      }),
+      object: new GLProgram(this.gl, {
+        shaders: ['/glsl/object.vs.glsl','/glsl/object.fs.glsl'],
+        attributes: ['aPosition','aNormal','aUV','aTransform'],
+        uniforms: ['uProjectionMatrix','uTransform','uNormalTransform','uAmbient','uDiffuse',
+          'uDiffuseMap','uUsesDiffuseMap',
+          'uSpecular',
+          'uSpecularMap','uUsesSpecularMap',
+          'uSpecularExponent',
+          'uSpecularExponentMap','uUsesSpecularExponentMap',
+          'uNormalMap','uUsesNormalMap'],
+        definitions: {
+          DIFFUSE_MAP: 1,
+          SPECULAR_MAP: 1,
+          SPECULAR_EXPONENT_MAP: 1,
+          NORMAL_MAP: 1
+        }
       })
     };
     this.dynamicProgramSettings = {
@@ -63,7 +81,7 @@ class Scene3d extends GLScene {
       material: {
         shaders: ['/glsl/object.vs.glsl','/glsl/object.fs.glsl'],
         attributes: ['aPosition','aNormal','aUV','aTransform'],
-        uniforms: ['uProjectionMatrix','uTransforms','uAmbient','uDiffuse','uDiffuseMap','uSpecular','uSpecularMap','uSpecularExponent','uSpecularExponentMap']
+        uniforms: ['uProjectionMatrix','uTransform','uNormalTransform','uAmbient','uDiffuse','uDiffuseMap','uSpecular','uSpecularMap','uSpecularExponent','uSpecularExponentMap']
       }
     };
     this._materialPrograms = {};
@@ -97,9 +115,12 @@ class Scene3d extends GLScene {
       }),
       lightingBuffer: new GLFramebuffer(this.gl, { size: fboSize })
     }
+    this.nullMap = new GLTexture2d (this.gl);
   }
 
-  _drawObjects () {
+  __drawObjects () {
+    this.framebuffers.gBuffer.use();
+    this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
     let allMtls = Material.getAll();
     for (let mtl in allMtls) {
       let material = allMtls[mtl];
@@ -138,7 +159,6 @@ class Scene3d extends GLScene {
         return false;
 
       program.use();
-      this.framebuffers.gBuffer.use();
 
       // assign indices as attributes
       this.buffers.aPosition.bindData(program.a.aPosition, positionArray, this.gl.DYNAMIC_DRAW);
@@ -181,6 +201,82 @@ class Scene3d extends GLScene {
     }
   }
 
+  _bindMaterialUniforms (program, material) {
+    // assign material stuff
+    this.gl.uniform4fv(program.u.uAmbient, material.ambient.toFloatArray());
+    this.gl.uniform4fv(program.u.uDiffuse, material.diffuse.toFloatArray());
+    this.gl.uniform4fv(program.u.uSpecular, material.specular.toFloatArray());
+    this.gl.uniform1f(program.u.uSpecularExponent, material.specularExponent);
+
+    // handle textures
+    let texData = material.getGLTextures(this.gl);
+
+    this.gl.activeTexture(this.gl.TEXTURE0);
+    this.gl.uniform1i(program.u.uUsesDiffuseMap, texData.diffuseMap ? 1 : 0);
+    if (texData.diffuseMap) texData.diffuseMap.bind();
+    else this.nullMap.bind();
+    this.gl.uniform1i(program.u.uDiffuseMap, 0);
+
+    this.gl.activeTexture(this.gl.TEXTURE1);
+    this.gl.uniform1i(program.u.uUsesSpecularMap, texData.specularMap ? 1 : 0);
+    if (texData.specularMap) texData.specularMap.bind();
+    else this.nullMap.bind();
+    this.gl.uniform1i(program.u.uSpecularMap, 1);
+
+    this.gl.activeTexture(this.gl.TEXTURE2);
+    this.gl.uniform1i(program.u.uUsesSpecularExponentMap, texData.specularExponentMap ? 1 : 0);
+    if (texData.specularExponentMap) texData.specularExponentMap.bind();
+    else this.nullMap.bind();
+    this.gl.uniform1i(program.u.uSpecularExponentMap, 2);
+
+    this.gl.activeTexture(this.gl.TEXTURE3);
+    this.gl.uniform1i(program.u.uUsesNormalMap, texData.normalMap ? 1 : 0);
+    if (texData.normalMap) texData.normalMap.bind();
+    else this.nullMap.bind();
+    this.gl.uniform1i(program.u.uNormalMap, 3);
+  }
+  _drawObjects () {
+    let program = this.programs.object;
+    if (!program.ready)
+      return;
+    program.use();
+    this.framebuffers.gBuffer.use();
+    // camera projection matrix
+    this.gl.uniformMatrix4fv(program.u.uProjectionMatrix, false, Matrix.I(4).flatten());
+    this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+
+    this._objects.forEach((function (object) {
+      let buffers = object.getBuffers(this.gl);
+
+      // bind object buffers
+      buffers.position.bindToAttribute(program.a.aPosition);
+      buffers.normal.bindToAttribute(program.a.aNormal);
+      buffers.uv.bindToAttribute(program.a.aUV);
+
+      for (let i = 0, len = buffers.mtls.length; i < len; i++) {
+        // get material and program for meshes in order
+        let material = Material.getByName(buffers.mtls[i]);
+
+        // let programSettings = extendObject({},this.dynamicProgramSettings.material,{definitions: material.getProgramDefinitions()});
+        // let program = GLProgram.getBy(this.gl, programSettings);
+        // if (!program) {
+        //   program = new GLProgram(this.gl, programSettings);
+        // }
+        // if (!program.ready)
+        //   continue;
+        //
+        // program.use();
+        this._bindMaterialUniforms(program, material);
+        buffers.elementBuffers[i].bind();
+
+        this.gl.uniformMatrix4fv( program.u.uTransform, false, object.mvMatrixFlat );
+        this.gl.uniformMatrix4fv( program.u.uNormalTransform, false, object.normalMatrixFlat );
+
+        this.gl.drawElements(this.gl.TRIANGLES, buffers.elementSizes[i], this.gl.UNSIGNED_SHORT, 0);
+      }
+    }).bind(this));
+  }
+
   _drawOutDebug () {
     // determine how many textures we have...
     let outputFrames = this.framebuffers.gBuffer.textures.length + 1;
@@ -198,7 +294,7 @@ class Scene3d extends GLScene {
     this.gl.viewport(0,0,this.width,this.height);
     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
     this.buffers.elements.bindData([0,1,2,0,2,3], this.gl.STATIC_DRAW);
-    this.buffers.aUV.bindData(this.programs.out.a.aUV, [0,1,1,1,1,0,0,0], this.gl.STATIC_DRAW);
+    this.buffers.aUV.bindDataToPosition(this.programs.out.a.aUV, [0,1,1,1,1,0,0,0], this.gl.STATIC_DRAW);
     this.gl.activeTexture(this.gl.TEXTURE0);
     this.gl.uniform1i(this.programs.out.u.uColorTexture, 0);
 
@@ -213,7 +309,7 @@ class Scene3d extends GLScene {
         x, y - size
       ];
 
-      this.buffers.aPositionOut.bindData(this.programs.out.a.aPosition, positionArray, this.gl.DYNAMIC_DRAW);
+      this.buffers.aPositionOut.bindDataToPosition(this.programs.out.a.aPosition, positionArray, this.gl.DYNAMIC_DRAW);
 
       if (i < outputFrames - 1) {
         this.framebuffers.gBuffer.textures[i].bind();

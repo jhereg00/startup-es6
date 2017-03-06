@@ -23,6 +23,8 @@
  */
 const extendObject = require('lib/extendObject');
 const AjaxRequest = require('lib/AjaxRequest');
+const GLArrayBuffer = require('lib/gl/core/GLArrayBuffer');
+const GLElementArrayBuffer = require('lib/gl/core/GLElementArrayBuffer');
 const WorldPositionable = require('lib/gl/3d/WorldPositionable');
 const Mesh = require('lib/gl/3d/Mesh');
 const Material = require('lib/gl/3d/Material');
@@ -61,6 +63,7 @@ class Object3d extends WorldPositionable {
     this._worldMatrix = Matrix.I(4);
     this._mvMatrix = Matrix.I(4);
     this._normalMatrix = Matrix.I(4);
+    this._bufferSets = [];
   }
 
   /////////////////////////
@@ -69,6 +72,7 @@ class Object3d extends WorldPositionable {
   _updateMatrices () {
     super._updateMatrices();
     this._normalMatrix = this._mvMatrix.inverse().transpose();
+    this._normalMatrixFlat = this._normalMatrix.flatten();
   }
 
   /////////////////////////
@@ -107,11 +111,64 @@ class Object3d extends WorldPositionable {
         data.positions = data.positions.concat(m.positions);
         data.uvs = data.uvs.concat(m.uvs);
         data.normals = data.normals.concat(m.normals);
-        data.indices = data.indices.concat(m.indices.map((i) => i + mOffset));
+        data.indices = data.indices.concat(m.indices);//.map((i) => i + mOffset));
       }
     });
 
     return data;
+  }
+
+  _buildBufferSet (gl) {
+    let positionBuffer = new GLArrayBuffer (gl);
+    let normalBuffer = new GLArrayBuffer (gl);
+    let uvBuffer = new GLArrayBuffer (gl, { attributeSize: 2 });
+    let elementBuffers = [];
+    let mtlNames = [];
+    let elementSizes =  [];
+    let elementData = [];
+
+    // bind the data
+    let positionData = [];
+    let normalData = [];
+    let uvData = [];
+    this.meshes.forEach(function (mesh) {
+      // build an element buffer
+      console.log("buffer's highest index: " + Math.max.apply(undefined,mesh.indices), "buffer's points: " + mesh.positions.length / 3);
+      let ebo = new GLElementArrayBuffer (gl);
+      ebo.bindData(mesh.indices.map((i) => i + (positionData.length / 3)));
+      elementBuffers.push(ebo);
+      elementData = elementData.concat(mesh.indices.map((i) => i + (positionData.length / 3)));
+      mtlNames.push(mesh.mtl);
+      elementSizes.push(mesh.indices.length);
+
+      positionData = positionData.concat(mesh.positions);
+      normalData = normalData.concat(mesh.normals);
+      uvData = uvData.concat(mesh.uvs);
+    });
+    console.log("built buffers. " + (positionData.length / 3) + " points, " + Math.max.apply(undefined, elementData) + " expected");
+    positionBuffer.bindData(positionData);
+    normalBuffer.bindData(normalData);
+    uvBuffer.bindData(uvData);
+
+    let bufferSet = {
+      gl: gl,
+      position: positionBuffer,
+      normal: normalBuffer,
+      uv: uvBuffer,
+      elementBuffers: elementBuffers,
+      mtls: mtlNames,
+      elementSizes: elementSizes
+    };
+    this._bufferSets.push(bufferSet);
+    return bufferSet;
+  }
+  getBuffers (gl) {
+    for (let i = 0, len = this._bufferSets.length; i < len; i++) {
+      if (this._bufferSets[i].gl === gl) {
+        return this._bufferSets[i];
+      }
+    }
+    return this._buildBufferSet (gl);
   }
 
   /////////////////////////

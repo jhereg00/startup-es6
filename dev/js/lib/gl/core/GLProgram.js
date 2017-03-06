@@ -137,7 +137,7 @@ class GLProgram {
     }
 
     this.gl.useProgram(this.program);
-    // if (this._needsRebind)
+    if (this._needsRebind)
       this._bindAttributesAndUniforms();
 
     let activeProgram = GLProgram.getActive(this.gl);

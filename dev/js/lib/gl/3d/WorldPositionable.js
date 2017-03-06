@@ -15,7 +15,9 @@ class WorldPositionable extends Positionable {
     this._modelMatrix = Matrix.I(4);
     this._worldMatrix = Matrix.I(4);
     this._mvMatrix = Matrix.I(4);
+    this._mvMatrixFlat = Matrix.I(4).flatten();
     this._normalMatrix = Matrix.I(4);
+    this._normalMatrixFlat = Matrix.I(4).flatten();
   }
 
   /////////////////////////
@@ -35,6 +37,7 @@ class WorldPositionable extends Positionable {
     if (this.parent) {
       this._mvMatrix = this._mvMatrix.multiply(this.parent.mvMatrix);
     }
+    this._mvMatrixFlat = this._mvMatrix.flatten();
 
     this._needsUpdate = false;
   }
@@ -67,6 +70,18 @@ class WorldPositionable extends Positionable {
       this._updateMatrices();
     }
     return this._normalMatrix;
+  }
+  get mvMatrixFlat () {
+    if (this._needsUpdate) {
+      this._updateMatrices();
+    }
+    return this._mvMatrixFlat;
+  }
+  get normalMatrixFlat () {
+    if (this._needsUpdate) {
+      this._updateMatrices();
+    }
+    return this._normalMatrixFlat;
   }
 }
 

@@ -25,7 +25,7 @@ class GLArrayBuffer extends GLBuffer {
     }, options || {}));
   }
 
-  bindData (position, data) {
+  bindDataToPosition (position, data) {
     super.bindToAttribute(position);
     super.bindData(data);
   }

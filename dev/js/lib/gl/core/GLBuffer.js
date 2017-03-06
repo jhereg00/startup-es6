@@ -75,7 +75,7 @@ class GLBuffer {
         data = new Float32Array(data);
       }
     }
-    this.gl.bufferData(this.type, data, drawType || this.gl.DYNAMIC_DRAW);
+    this.gl.bufferData(this.type, data, drawType || this.gl.STATIC_DRAW);
   }
 }
 
