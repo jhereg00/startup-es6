@@ -480,17 +480,6 @@ class Matrix {
 			[x, y, z, 1]
 		]);
 	}
-	/**
-	 * scale
-	 */
-	static scale3d (x = 1, y = 1, z = 1) {
-		return Matrix.create([
-			[x, 0, 0, 0],
-			[0, y, 0, 0],
-			[0, 0, z, 0],
-			[0, 0, 0, 1]
-		])
-	}
 }
 
 // aliases

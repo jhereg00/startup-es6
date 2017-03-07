@@ -41,8 +41,6 @@ class Frustrum {
     }
     return this._matrix;
   }
-
-  // TODO: setters that call _flagForUpdate
 }
 
 module.exports = Frustrum;

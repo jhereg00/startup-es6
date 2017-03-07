@@ -100,7 +100,7 @@ module.exports = function () {
       // primaryCamera.rotateBy(0,coneRotationSpeed * (deltaTime / 1000), 0);
       blob.scaleTo(Math.sin((performance.now() - loopStartTime) / 2000) * .25 + 1,1,1);
       scene.drawDebug();
-      // updateFPSDebug(deltaTime);
+      updateFPSDebug(deltaTime);
     }
     requestAnimationFrame(loop);
     loopLastTime = performance.now();

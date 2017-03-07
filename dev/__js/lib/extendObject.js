@@ -42,13 +42,9 @@ function extendObject () {
         sourceMeta = setMeta(source[key]);
         if (source[key] !== target[key]) {
           // not the same, better update target
-          if (sourceMeta === 1) {
-            target[key] = Array.prototype.slice.apply(source[key],[0]);
-          }
-          else if (!shallow && sourceMeta && targetMeta && targetMeta === sourceMeta) {
+          if (!shallow && sourceMeta && targetMeta && targetMeta === sourceMeta) {
             // deep extend if of same type
-            let newVal = {};
-            target[key] = extendObject(newVal, target[key], source[key], false);
+            target[key] = extendObject(target[key], source[key], true);
           } else if (sourceMeta !== 0) {
             // shallow, or just set to source's prop
             target[key] = source[key];
