@@ -24,7 +24,9 @@
  */
 
 class Quaternion {
-  constructor () {
+	constructor () {
 
-  }
+	}
 }
+
+module.exports = Quaternion;

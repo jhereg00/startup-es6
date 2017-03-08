@@ -11,12 +11,14 @@ global.serverPort = 8002;
 
 var gulp = require('gulp');
 // gulp.task('sass',require('./gulp-tasks/sass'));
-gulp.task('scripts',require('./gulp-tasks/scripts'));
+gulp.task('scripts',['lint'],require('./gulp-tasks/scripts'));
 // gulp.task('images',require('./gulp-tasks/images'));
 gulp.task('html',require('./gulp-tasks/html'));
 gulp.task('testData',require('./gulp-tasks/testData'));
 // gulp.task('autoguide',require('./gulp-tasks/autoguide'));
 gulp.task('obj',require('./gulp-tasks/obj'));
+gulp.task('lint',require('./gulp-tasks/lint'));
+gulp.task('lint-fix',require('./gulp-tasks/lint').fix);
 
 // start a server for easy dev
 gulp.task('server',require('./gulp-tasks/webserver'));
