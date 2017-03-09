@@ -12,10 +12,21 @@
  *     @param antialias
  *     @param premultipliedAlpha
  *     @param preserveDrawingBuffer
+ *
+ * @method clear - clear the context
+ *   @param {boolean} color
+ *   @param {boolean} depth
+ *   @param {boolean} stencil
+ *
+ * @prop pixelRatio
  */
+// used classes
+const InstancedProperties = require('lib/gl/core/InstancedProperties');
 
+// helpers
 const extendObject = require('lib/helpers/extendObject');
 
+// settings
 const DEFAULT_CONTEXT_ATTRIBUTES = {
 	alpha: false,
 	depth: true,
@@ -41,7 +52,29 @@ class Renderer {
 				throw 'Error creating WebGL context.';
 			}
 		}
+		// store some instanced properties
+		this._instancedProperties = new InstancedProperties();
+		// default up a pixel ratio
+		this._pixelRatio = window.devicePixelRatio || 1;
+	}
 
+	clear (color, depth, stencil) {
+		let bits = 0;
+
+		if (color === undefined || color) bits |= this.gl.COLOR_BUFFER_BIT;
+		if (depth === undefined || depth) bits |= this.gl.DEPTH_BUFFER_BIT;
+		if (stencil === undefined || stencil) bits |= this.gl.STENCIL_BUFFER_BIT;
+
+		this.gl.clear(bits);
+	}
+
+	get pixelRatio () {
+		return this._pixelRatio;
+	}
+	set pixelRatio (ratio) {
+		if (ratio) {
+			this._pixelRatio = ratio;
+		}
 	}
 }
 
