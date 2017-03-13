@@ -13,6 +13,7 @@ describe("lib", function () {
 		describe("core", function () {
 			require("tests/lib/gl/core/Renderer");
 			require("tests/lib/gl/core/InstancedProperties");
+			require("tests/lib/gl/core/GLBuffer");
 		});
 	});
 });

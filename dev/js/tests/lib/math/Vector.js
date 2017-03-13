@@ -2,7 +2,7 @@ const expect = chai.expect;
 
 describe("Vector", function () {
   const Vector = require('lib/math/Vector');
-  
+
   it("constructs from passed arguments", function () {
     let v = new Vector();
     expect(v.x).to.equal(0);
@@ -96,7 +96,6 @@ describe("Vector", function () {
       v1.normalize();
       expect(v1.magnitude).to.be.greaterThan(.99998);
       expect(v1.magnitude).to.be.lessThan(1.00002);
-      console.log(v1);
       expect(v1._data).to.eql([0.7071067811865475, 0.7071067811865475]);
 
       v1 = new Vector (1,2,3,4);
