@@ -75,4 +75,12 @@ describe("ShaderSource", function () {
 			});
 		});
 	});
+
+	it("automatically determines attributes and uniforms present in shader", function () {
+		let ss = ShaderSource.get("test.vs.glsl");
+		return ss.onLoad(() => {
+			expect(ss.attributes).to.eql(['aVertexPosition']);
+			expect(ss.uniforms).to.eql(['uProjectionMatrix']);
+		});
+	});
 });

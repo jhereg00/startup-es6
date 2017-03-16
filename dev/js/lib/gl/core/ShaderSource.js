@@ -2,6 +2,15 @@
  * ShaderSource
  *
  * Controls source data for shaders.  Not directly connected to any WebGLRenderingContext.
+ *
+ * @param {string} path
+ * @param {int from enum} shaderType
+ *
+ * @method {Promise} compile
+ * 	 @param {WebGLRenderingContext} gl
+ *   @param {Object} definitions
+ * @method {Promise} onLoad
+ *   @param {function} fn
  */
 const AjaxRequest = require('lib/util/AjaxRequest');
 
@@ -17,14 +26,28 @@ class ShaderSource {
 		this._ajaxRequest = new AjaxRequest({ url: this.path });
 		this._ajaxRequest.then((response) => {
 			this.source = response;
+			this._getAttributesAndUniforms();
 		}, (status) => {
 			throw new Error("Failed to get ShaderSource: " + this.path + ". Received status code " + status);
 		});
 
+		// store variables
+		this.attributes = [];
+		this.uniforms = [];
+
 		sourcesByPath[this.path] = this;
 	}
 
-	// methods
+	// private methods
+	_getAttributesAndUniforms () {
+		let re = /(attribute|uniform)(\s|\n)+([\w\d]+)(\s|\n)+([\w\d_]+)/g;
+		let match;
+		while ((match = re.exec(this.source))) {
+			this[match[1] + "s"].push(match[5]);
+		}
+	}
+
+	// public methods
 	compile (gl, definitions) {
 		if (!(gl instanceof WebGLRenderingContext)) {
 			throw new Error("ShaderSource#compile requires a valid WebGLRenderingContext as the first argument");
@@ -65,6 +88,10 @@ class ShaderSource {
 				promiseFn(resolve, reject);
 			});
 		});
+	}
+
+	onLoad (fn) {
+		return this._ajaxRequest.then(fn);
 	}
 
 	// statics

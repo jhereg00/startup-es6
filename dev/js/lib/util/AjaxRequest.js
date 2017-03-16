@@ -11,9 +11,10 @@
  *	 @param {function} onComplete - function to fire whether succeeded or failed
  *	 @param {function} onSuccess - function to fire when status is 2** or 3**
  *	 @param {function} onError - function to fire when status is 4** or 5**
- * @returns {Promise}
  *
  * @prop {Promise} promise
+ *	 `resolve` gets passed the responseText
+ *	 `reject` gets passed the status code
  *
  * @static @method {Promise} make - an alternate way of creating an AjaxRequest. Returns the created AjaxRequest.
  * @static @method {Array<AjaxRequest>} getActiveRequests
