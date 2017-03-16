@@ -18,6 +18,7 @@ describe("lib", function () {
 			require("tests/lib/gl/core/InstancedProperties");
 			require("tests/lib/gl/core/GLBuffer");
 			require("tests/lib/gl/core/ShaderSource");
+			require("tests/lib/gl/core/GLProgram");
 		});
 	});
 });
