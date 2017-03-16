@@ -1,6 +1,14 @@
 /**
  * GLProgram
  *
+ * @param {WebGLRenderingContext} gl
+ * @param {Object} options
+ *   @prop {string} vertexShader
+ *   @prop {string} fragmentShader
+ *   @prop {Object} definitions
+ *
+ * @method onReady
+ * @method use
  */
 const ShaderSource = require('lib/gl/core/ShaderSource');
 
