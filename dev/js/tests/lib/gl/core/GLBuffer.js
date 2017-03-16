@@ -2,6 +2,7 @@
  * GLArrayBuffer tests
  */
 const expect = chai.expect;
+const spy = sinon.spy;
 const GLBuffer = require('lib/gl/core/GLBuffer');
 
 let makeTempBuffer = function (gl, length = 10) {
@@ -33,6 +34,10 @@ describe("GLBuffer", function () {
 	it("can be passed an integer as the second argument to be used as attributeSize", function () {
 		let buffer = new GLBuffer(gl, 3);
 		expect(buffer.attributeSize).to.equal(3);
+	});
+	it("creates a buffer", function () {
+		let buffer = new GLBuffer(gl);
+		expect(buffer._buffer).to.be.instanceof(WebGLBuffer);
 	});
 
 	describe("append", function () {
@@ -120,6 +125,20 @@ describe("GLBuffer", function () {
 			buffer.clear();
 			expect(buffer.length).to.equal(0);
 			expect(buffer._data).to.eql([]);
+		});
+	});
+
+	describe("binding", function () {
+		let buffer = makeTempBuffer(gl);
+		it("can be bound as the active buffer", function () {
+			buffer.bind();
+			expect(gl.getParameter(gl.ARRAY_BUFFER_BINDING)).to.equal(buffer._buffer);
+		});
+		it("can be bound to a position", function () {
+			let bindSpy = spy(gl, "vertexAttribPointer");
+			buffer.bindToPosition(0);
+			expect(bindSpy.calledOnce).to.be.true;
+			expect(bindSpy.calledWith(0, 3, gl.FLOAT)).to.be.true;
 		});
 	});
 });

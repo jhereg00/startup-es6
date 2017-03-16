@@ -9,7 +9,9 @@
   "globals": {
     "require": true,
     "module": true,
-    "chai": true
+    "chai": true,
+    "sinon": true,
+    "Promise": true
   },
   "rules": {
     "no-console": ["warn", {

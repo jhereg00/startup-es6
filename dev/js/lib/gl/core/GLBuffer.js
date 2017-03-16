@@ -27,9 +27,15 @@
  * @method clear - strip data from the internal array. Careful, this changes the size of the array and will affect any pointers to indices later in the array
  *   @param {int} startClearIndex - default 0
  *   @param {int} clearLength - default all
+ * @method bind - make this buffer active
+ * @method bindToPosition - binds to an attribute position
+ *   @param {int} position
  *
  * @prop length - read only length normalized for attributeSize
  */
+
+/* eslint */
+/* global Float32Array, Uint16Array */
 const extendObject = require('lib/helpers/extendObject');
 
 const DEFAULTS = {
@@ -69,6 +75,9 @@ class GLBuffer {
 
 		this._data = [];
 		this._markers = {};
+		this._buffer = gl.createBuffer();
+		this._gl = gl;
+		this._needsUpdate = false;
 	}
 
 	append (...args) {
@@ -88,6 +97,8 @@ class GLBuffer {
 			start: start,
 			length: length
 		};
+
+		this._needsUpdate = true;
 
 		return output;
 	}
@@ -113,7 +124,32 @@ class GLBuffer {
 			return this._data = [];
 		}
 
+		this._needsUpdate = true;
+
 		return this._data = this._data.slice(0, start * this.attributeSize).concat(this._data.slice((start + length) * this.attributeSize));
+	}
+
+	bind () {
+		if (this._needsUpdate) {
+			let data = this.glDataType === this._gl.FLOAT ? new Float32Array(this._data) : new Uint16Array(this._data);
+			this._gl.bufferData(this._buffer, data, this._gl.STATIC_DRAW);
+		}
+		this._gl.bindBuffer(this.glBufferType, this._buffer);
+	}
+
+	bindToPosition (position) {
+		if (position < 0 || position === undefined)
+			throw new Error("Attempt to bind GLBuffer to invalid position " + position);
+
+		this.bind();
+		this._gl.vertexAttribPointer(
+      position,
+      this.attributeSize,
+      this.glDataType,
+      this._gl.FALSE,
+      0,
+      0
+    );
 	}
 
 
