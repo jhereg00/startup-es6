@@ -47,6 +47,10 @@ class Vector {
   // //////
   // public
   // //////
+	asFloat32 () {
+		return new Float32Array(this._data);
+	}
+
 	clone () {
 		return new Vector(this._data);
 	}
@@ -155,7 +159,7 @@ class Vector {
 // make it array-like
 for (let i = 0; i < 4; i++) {
 	Object.defineProperty(Vector.prototype, i, { get: function () {
-		return this._data[i]; 
+		return this._data[i];
 	}});
 }
 

@@ -7,6 +7,8 @@ describe("lib", function () {
 		require("tests/lib/math/Vector");
 		// require("tests/lib/math/Vec2");
 		// require("tests/lib/math/Vec3");
+		require("tests/lib/math/Matrix4");
+		require("tests/lib/math/Euler");
 		require("tests/lib/math/Quaternion");
 	});
 	describe("util", function () {
@@ -19,6 +21,11 @@ describe("lib", function () {
 			require("tests/lib/gl/core/GLBuffer");
 			require("tests/lib/gl/core/ShaderSource");
 			require("tests/lib/gl/core/GLProgram");
+			require("tests/lib/gl/core/GLTexture2d");
+			require("tests/lib/gl/core/GLFramebuffer");
+		});
+		describe("3d", function () {
+			require("tests/lib/gl/3d/Renderer3d");
 		});
 	});
 });

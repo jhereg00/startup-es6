@@ -11,7 +11,10 @@
     "module": true,
     "chai": true,
     "sinon": true,
-    "Promise": true
+    "Promise": true,
+    "Float32Array": true,
+    "Uint16Array": true,
+    "Int32Array": true
   },
   "rules": {
     "no-console": ["warn", {
