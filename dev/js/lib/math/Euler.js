@@ -4,6 +4,7 @@
  * https://en.wikipedia.org/wiki/Euler_angles
  *
  */
+const Vector = require('lib/math/Vector');
 
 class Euler {
 	constructor (x, y, z, order) {

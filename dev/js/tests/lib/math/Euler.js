@@ -27,5 +27,4 @@ describe("Euler", function () {
 		expect(e2.x).to.equal(1);
 		expect([e2.x, e2.y, e2.z, e2.order]).to.eql([e1.x, e1.y, e1.z, e1.order]);
 	});
-	it("can create a rotation matrix (Matrix4)");
 });
