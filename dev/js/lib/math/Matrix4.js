@@ -183,6 +183,10 @@ class Matrix4 {
 		return new Matrix4(out);
 	}
 
+	clone () {
+		return new Matrix4(this._data);
+	}
+
 	// /////////
 	// static methods
 	// /////////

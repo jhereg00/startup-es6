@@ -44,4 +44,10 @@ describe("Renderer", function () {
 		expect(r.instancedProperties).to.be.undefined;
 		expect(r._instancedProperties).to.be.instanceof(InstancedProperties);
 	});
+	it("can add its canvas to a DOM element", function () {
+		let el = document.createElement('div');
+		r.addTo(el);
+
+		expect(r.canvas.parentNode).to.equal(el);
+	});
 });

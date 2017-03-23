@@ -130,11 +130,11 @@ class GLBuffer {
 	}
 
 	bind () {
+		this._gl.bindBuffer(this.glBufferType, this._buffer);
 		if (this._needsUpdate) {
 			let data = this.glDataType === this._gl.FLOAT ? new Float32Array(this._data) : new Uint16Array(this._data);
-			this._gl.bufferData(this._buffer, data, this._gl.STATIC_DRAW);
+			this._gl.bufferData(this.glBufferType, data, this._gl.STATIC_DRAW);
 		}
-		this._gl.bindBuffer(this.glBufferType, this._buffer);
 	}
 
 	bindToPosition (position) {

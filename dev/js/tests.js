@@ -26,6 +26,9 @@ describe("lib", function () {
 		});
 		describe("3d", function () {
 			require("tests/lib/gl/3d/Renderer3d");
+			require("tests/lib/gl/3d/Positionable");
 		});
 	});
 });
+
+after(require("tests/visualTest"));

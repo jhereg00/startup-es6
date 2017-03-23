@@ -12,5 +12,13 @@ describe("Renderer3d", function () {
 		expect(r).to.be.instanceof(Renderer3d);
 		expect(r).to.be.instanceof(Renderer);
 	});
-	
+
+	it("can draw lines representing world space", function () {
+		expect(r.enableWorldSpace).to.exist;
+		r.enableWorldSpace();
+		expect(r._drawWorldSpaceEnabled).to.be.true;
+		expect(r._drawWorldSpace).not.to.throw;
+		// past that requires visual verification
+	});
+
 });

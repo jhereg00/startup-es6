@@ -82,14 +82,16 @@ class GLProgram {
 		this.uniforms = [];
 
 		this._attributeNames.forEach((name) => {
-			this.attributes.push(this._gl.getAttribLocation(this.program, name));
+			this.attributes[name] = this._gl.getAttribLocation(this.program, name);
 			if (this.attributes[name] !== -1) {
 				this._gl.enableVertexAttribArray(this.attributes[name]);
 			}
 		});
 		this._uniformNames.forEach((name) => {
-			this.uniforms.push(this._gl.getUniformLocation(this.program, name));
+			this.uniforms[name] = this._gl.getUniformLocation(this.program, name);
 		});
+
+		console.log('got positions', this, this.a);
 	}
 
 	// public methods

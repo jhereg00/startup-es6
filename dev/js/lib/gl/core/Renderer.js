@@ -17,6 +17,8 @@
  *   @param {boolean} color
  *   @param {boolean} depth
  *   @param {boolean} stencil
+ * @method addTo - adds the canvas to a DOMElement
+ *   @param {DOMElement} domElement
  *
  * @prop pixelRatio
  */
@@ -27,6 +29,8 @@ const InstancedProperties = require('lib/gl/core/InstancedProperties');
 const extendObject = require('lib/helpers/extendObject');
 
 // settings
+const DEFAULT_WIDTH = 1280;
+const DEFAULT_HEIGHT = 720;
 const DEFAULT_CONTEXT_ATTRIBUTES = {
 	alpha: false,
 	depth: true,
@@ -41,6 +45,8 @@ class Renderer {
 		options = options || {};
     // establish this renderer's params
 		this.canvas = options.canvas || document.createElementNS('http://www.w3.org/1999/xhtml', 'canvas');
+		this.canvas.width = options.width || DEFAULT_WIDTH;
+		this.canvas.height = options.height || DEFAULT_HEIGHT;
 		let contextAttributes = extendObject({}, DEFAULT_CONTEXT_ATTRIBUTES, options.contextAttributes);
 		this.gl = this.canvas.getContext("webgl", contextAttributes) || this.canvas.getContext("experimental-webgl", contextAttributes);
     // check that it worked
@@ -66,6 +72,10 @@ class Renderer {
 		if (stencil === undefined || stencil) bits |= this.gl.STENCIL_BUFFER_BIT;
 
 		this.gl.clear(bits);
+	}
+
+	addTo (domElement) {
+		domElement.appendChild(this.canvas);
 	}
 
 	get pixelRatio () {

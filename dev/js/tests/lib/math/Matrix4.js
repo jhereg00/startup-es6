@@ -166,6 +166,12 @@ describe("Matrix4", function () {
 		]);
 		expect(m.multiply(new Vector(1, 1, 1, 1))._data).to.eql([2, 3, 4, 1]);
 	});
+	it("can be cloned", function () {
+		let m = Matrix4.I;
+		let m2 = m.clone();
+		expect(m2).to.eql(m);
+		expect(m2).not.to.equal(m);
+	});
 
 	describe("maths", function () {
 		it("can multiply by a vector, returning a Vector", function () {
