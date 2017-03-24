@@ -136,8 +136,11 @@ describe("Positionable", function () {
 	});
 	it("can look at a point from its current position (assumes z rotation === 0)", function () {
 		p.moveTo(0, 0, 2);
+		// reset
+		p.rotateTo(0, 0, 0);
+		expect(p.getEuler()._z).to.equal(0);
+
 		p.lookAt(-2, 2.8284271247461903, 0);
-		console.log(p._euler, 7 * Math.PI / 4);
 		expect(p._rotation).to.eql({
 			x: Math.PI / 4,
 			y: 3 * Math.PI / 4,
@@ -161,5 +164,9 @@ describe("Positionable", function () {
 			y: 0,
 			z: 0
 		});
+	});
+	it("returns the mvMatrix", function () {
+		expect(p.mvMatrix).to.be.instanceof(Matrix4);
+		expect(p._needsUpdate.mv).to.be.false;
 	});
 });

@@ -17,7 +17,7 @@ varying vec4 vPos;
 
 void main () {
   vec4 worldPosition = vec4(aPosition, 1.0);
-  gl_Position = worldPosition;
+  gl_Position = uProjectionMatrix * worldPosition;
   vPos = worldPosition;
 
   // vNormal = (uNormalTransform * vec4(aNormal, 0.0)).xyz;

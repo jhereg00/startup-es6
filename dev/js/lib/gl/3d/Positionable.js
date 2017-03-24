@@ -58,7 +58,7 @@ class Positionable {
 			position: false,
 			rotation: false,
 			scale: false,
-			mv: false
+			mv: true
 		};
 
 		// public objects
@@ -175,6 +175,7 @@ class Positionable {
 		return this._scaleMatrix;
 	}
 
+	// BROKEN
 	lookAt (x, y, z) {
 		if (typeof x === "object" && x._data) {
 			y = x._data[1];
@@ -195,9 +196,18 @@ class Positionable {
 		}
 
 		this._euler.x = Math.atan(y / (Math.sqrt(z * z + x * x)));
-		this._euler.z = 0;
+		// this._euler.z = 0;
 
 		this.setRotationFromEuler(this._euler);
+	}
+
+	get mvMatrix () {
+		if (this._needsUpdate.mv) {
+			// getting non '_' versions to make sure they get built if needed
+			this._mvMatrix = this.scaleMatrix.multiply(this.rotationMatrix).multiply(this.positionMatrix);
+			this._needsUpdate.mv = false;
+		}
+		return this._mvMatrix;
 	}
 }
 
