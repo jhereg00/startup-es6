@@ -7,6 +7,8 @@ module.exports = function () {
 
 	const Renderer3d = require('lib/gl/3d/Renderer3d');
 	const ShaderSource = require('lib/gl/core/ShaderSource');
+	const Box = require('lib/gl/3d/primitives/Box');
+	const Object3d = require('lib/gl/3d/Object3d');
 	// const PerspectiveCamera = require('lib/gl/3d/PerspectiveCamera');
 
 	ShaderSource.setPathPrepend("/glsl/");
@@ -22,6 +24,26 @@ module.exports = function () {
 	cam.zFar = 1000;
 	cam.moveTo(0, 1, -2);
 	cam.lookAt(0, 0, 0);
+
+	let boxPile = [];
+	for (let i = 0; i < 10; i++) {
+		boxPile.push(
+			new Object3d({
+				meshes: [
+					new Box({
+						width: Math.random(),
+						height: Math.random(),
+						depth: Math.random()
+					})
+				]
+			}).moveTo(
+				Math.random() * 4 - Math.random() * 2,
+				0,
+				Math.random() * 4 - Math.random() * 2
+			)
+		);
+	}
+	boxPile.forEach((box) => scene1.addElement(box));
 
 	scene1.render();
 
@@ -62,7 +84,7 @@ module.exports = function () {
 	let startTime = performance.now();
 	(function loop () {
 		let deltaTime = (performance.now() - startTime) / 1000;
-		cam.moveTo(Math.sin(deltaTime) + 2, 1, Math.sin(deltaTime / 5) * 5);
+		cam.moveTo(Math.sin(deltaTime) * 3, -1, Math.cos(deltaTime) * 3);
 		cam.lookAt(0, 0, 0);
 		scene1.render();
 

@@ -39,6 +39,7 @@ let xyzGetterSetter = function (objName) {
 					realObj[prop] = v;
 					this._needsUpdate[objName] = true;
 					this._needsUpdate.mv = true;
+					this.children.forEach((child) => child._needsUpdate.mv = true);
 				}
 			});
 		});
@@ -54,6 +55,10 @@ class Positionable {
 		this._rotationMatrix = Matrix4.I.clone();
 		this._scale = { x: 1, y: 1, z: 1 };
 		this._scaleMatrix = Matrix4.I.clone();
+		this._mvMatrix = Matrix4.I.clone();
+
+		this.children = [];
+		this.parent = null;
 
 		this._needsUpdate = {
 			position: false,
@@ -79,6 +84,7 @@ class Positionable {
 		};
 		this._needsUpdate.position = true;
 		this._needsUpdate.mv = true;
+		return this;
 	}
 	moveBy (x, y, z) {
 		this._position = {
@@ -88,6 +94,7 @@ class Positionable {
 		};
 		this._needsUpdate.position = true;
 		this._needsUpdate.mv = true;
+		return this;
 	}
 	get positionMatrix () {
 		if (!this._positionMatrix || this._needsUpdate.position) {
@@ -109,6 +116,7 @@ class Positionable {
 		};
 		this._needsUpdate.rotation = true;
 		this._needsUpdate.mv = true;
+		return this;
 	}
 	rotateBy (x, y, z) {
 		this._rotation = {
@@ -118,6 +126,7 @@ class Positionable {
 		};
 		this._needsUpdate.rotation = true;
 		this._needsUpdate.mv = true;
+		return this;
 	}
 	getEuler () {
 		// guarantee it's up to date
@@ -151,6 +160,7 @@ class Positionable {
 		};
 		this._needsUpdate.scale = true;
 		this._needsUpdate.mv = true;
+		return this;
 	}
 	scaleBy (x, y, z) {
 		y = isNaN(y) ? x : y;
@@ -163,6 +173,7 @@ class Positionable {
 		};
 		this._needsUpdate.scale = true;
 		this._needsUpdate.mv = true;
+		return this;
 	}
 	get scaleMatrix () {
 		if (!this._scaleMatrix || this._needsUpdate.scale) {
@@ -176,7 +187,6 @@ class Positionable {
 		return this._scaleMatrix;
 	}
 
-	// BROKEN
 	lookAt (x, y, z) {
 		if (typeof x === "object" && x._data) {
 			y = x._data[1];
@@ -220,6 +230,8 @@ class Positionable {
 		this._rotation.x = this._euler.x;
 		this._rotation.y = this._euler.y;
 		this._rotation.z = this._euler.z;
+
+		return this;
 	}
 
 	get mvMatrix () {
@@ -235,6 +247,32 @@ class Positionable {
 		else {
 			return this._mvMatrix;
 		}
+	}
+
+	addChild (child) {
+		if (child instanceof Positionable) {
+			if (this.children.indexOf(child) === -1) {
+				this.children.push(child);
+				if (child.parent) {
+					child.parent.removeChild(child);
+				}
+				child.parent = this;
+			}
+		}
+		else {
+			throw new Error(this.constructor.name + "#addChild only accepts instances of Positionable (or classes that extend Positionable)");
+		}
+
+		return this;
+	}
+
+	removeChild (child) {
+		if (this.children.indexOf(child) !== -1) {
+			this.children.splice(this.children.indexOf(child), 1);
+			child.parent = null;
+		}
+
+		return this;
 	}
 }
 

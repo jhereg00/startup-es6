@@ -78,8 +78,8 @@ class GLProgram {
 	}
 
 	_getPositions () {
-		this.attributes = [];
-		this.uniforms = [];
+		this.attributes = {};
+		this.uniforms = {};
 
 		this._attributeNames.forEach((name) => {
 			this.attributes[name] = this._gl.getAttribLocation(this.program, name);

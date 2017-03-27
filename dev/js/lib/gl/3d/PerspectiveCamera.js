@@ -17,7 +17,6 @@ class PerspectiveCamera extends Positionable {
 	constructor (options) {
 		super();
 
-		this._scale.y = -1;
 		this._needsUpdate.scale = true;
 		extendObject(this, DEFAULTS, options);
 	}

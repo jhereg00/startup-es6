@@ -12,8 +12,12 @@ let extendObject = function (target, ...sources) {
 		for (let key in s) {
 			if (s.hasOwnProperty(key)) {
 				if (s[key] !== target[key]) {
+					// special cases
+					if (s[key] === null || s[key] === undefined) {
+						target[key] = s[key];
+					}
           // if array, make a copy of it
-					if (s[key] instanceof Array) {
+					else if (s[key] instanceof Array) {
 						target[key] = s[key].slice();
 					}
           // not a native Object (so, either a primitive or instance of something where the programmer probably wants that instance to stick around)

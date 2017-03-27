@@ -152,4 +152,15 @@ describe("Positionable", function () {
 		expect(p.mvMatrix).to.be.instanceof(Matrix4);
 		expect(p._needsUpdate.mv).to.be.false;
 	});
+	it("may have children added and removed", function () {
+		let p = new Positionable();
+		expect(p.children).to.exist;
+		let child = new Positionable();
+		p.addChild(child);
+		expect(p.children).to.eql([child]);
+		expect(child.parent).to.eql(p);
+		p.removeChild(child);
+		expect(p.children).to.eql([]);
+		expect(child.parent).to.be.null;
+	});
 });

@@ -6,6 +6,7 @@ attribute vec3 aPosition;
 // attribute float aTransform;
 
 uniform mat4 uProjectionMatrix;
+uniform mat4 uMVMatrix;
 // uniform mat4 uTransforms [MAX_OBJECTS * 2];
 // uniform mat4 uTransform;
 // uniform mat4 uNormalTransform;
@@ -16,7 +17,7 @@ varying vec4 vPos;
 // varying vec2 vUV;
 
 void main () {
-  vec4 worldPosition = vec4(aPosition, 1.0);
+  vec4 worldPosition = uMVMatrix * vec4(aPosition, 1.0);
   gl_Position = uProjectionMatrix * worldPosition;
   vPos = worldPosition;
 
