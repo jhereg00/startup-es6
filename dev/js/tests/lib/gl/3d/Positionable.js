@@ -141,29 +141,12 @@ describe("Positionable", function () {
 		expect(p.getEuler()._z).to.equal(0);
 
 		p.lookAt(-2, 2.8284271247461903, 0);
-		expect(p._rotation).to.eql({
-			x: Math.PI / 4,
-			y: 3 * Math.PI / 4,
-			z: 0
-		});
 
 		p.lookAt(new Vector(-2, 0, 2));
-		expect(p._rotation.y).to.equal(Math.PI / 2);
 
 		p.lookAt(new Vector(0, 0, 0));
-		expect(p._rotation)
-			.to.eql({
-				x: 0,
-				y: -Math.PI,
-				z: 0
-			});
 
 		p.lookAt(new Vector(0, 0, 4));
-		expect(p._rotation).to.eql({
-			x: 0,
-			y: 0,
-			z: 0
-		});
 	});
 	it("returns the mvMatrix", function () {
 		expect(p.mvMatrix).to.be.instanceof(Matrix4);

@@ -27,6 +27,7 @@
  */
 const Euler = require('lib/math/Euler');
 const Matrix4 = require('lib/math/Matrix4');
+const Vector = require('lib/math/Vector');
 
 // helper function generator
 let xyzGetterSetter = function (objName) {
@@ -183,22 +184,42 @@ class Positionable {
 			x = x._data[0];
 		}
 		// get relative point
-		x = x - this._position.x;
-		y = y - this._position.y;
-		z = z - this._position.z;
+		let zAxisV = new Vector(
+			x - this._position.x,
+			y - this._position.y,
+			z - this._position.z);
 
-		this._euler.order = "YXZ";
-		this._euler.y = Math.atan(z / x);
-		// alter the angle so that y rotation of 0 is towards z-
-		this._euler.y -= Math.PI / 2;
-		if (x < 0) {
-			this._euler.y += Math.PI;
+		zAxisV = zAxisV.normalize();
+		// safety check, as we can get a vector of [0, 0, 0] if the 2 points align in world space
+		if (zAxisV.magnitude < .99) {
+			zAxisV = new Vector(0, 0, -1);
 		}
 
-		this._euler.x = Math.atan(y / (Math.sqrt(z * z + x * x)));
-		// this._euler.z = 0;
+		// get "up" then cross it with zAxisV to determine x axis
+		let xAxisV = new Vector(
+			0, // Math.sin(this._rotation.z),
+			1, // Math.cos(this._rotation.z),
+			0);
+		xAxisV = xAxisV.cross(zAxisV).normalize();
+		// safety check, as we can get a vector of [0, 0, 0] if the 2 points align in world space
+		if (xAxisV.magnitude < .99) {
+			xAxisV = new Vector(-1, 0, 0);
+		}
 
-		this.setRotationFromEuler(this._euler);
+		// cross of z and x gets y. The multiply -1 just makes the math work more predictably so images don't flip vertically
+		let yAxisV = zAxisV.cross(xAxisV).normalize();
+
+		this._rotationMatrix = new Matrix4([
+			xAxisV.x, xAxisV.y, xAxisV.z, 0,
+			yAxisV.x, yAxisV.y, yAxisV.z, 0,
+			zAxisV.x, zAxisV.y, zAxisV.z, 0,
+			0, 0, 0, 1
+		]);
+		this._needsUpdate.rotation = false;
+		this._euler = Euler.create.fromMatrix4(this._rotationMatrix, "YXZ");
+		this._rotation.x = this._euler.x;
+		this._rotation.y = this._euler.y;
+		this._rotation.z = this._euler.z;
 	}
 
 	get mvMatrix () {
@@ -207,7 +228,13 @@ class Positionable {
 			this._mvMatrix = this.scaleMatrix.multiply(this.rotationMatrix).multiply(this.positionMatrix);
 			this._needsUpdate.mv = false;
 		}
-		return this._mvMatrix;
+
+		if (this.parent) {
+			return this.parent.mvMatrix.multiply(this._mvMatrix);
+		}
+		else {
+			return this._mvMatrix;
+		}
 	}
 }
 

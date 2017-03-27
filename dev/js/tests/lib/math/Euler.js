@@ -2,6 +2,7 @@ const expect = chai.expect;
 
 describe("Euler", function () {
 	const Euler = require('lib/math/Euler');
+	const Matrix4 = require('lib/math/Matrix4');
 
 	it("has a default order static (DEFAULT_ORDER)", function () {
 		expect(Euler.DEFAULT_ORDER).to.exist;
@@ -26,5 +27,14 @@ describe("Euler", function () {
 		expect(e2).to.not.equal(e1);
 		expect(e2.x).to.equal(1);
 		expect([e2.x, e2.y, e2.z, e2.order]).to.eql([e1.x, e1.y, e1.z, e1.order]);
+	});
+	it("can be created from a rotation matrix", function () {
+		let mat = new Matrix4([
+			0, 0, 1, 0,
+			0, 1, 0, 0,
+			-1, 0, 0, 0,
+			0, 0, 0, 1
+		]);
+		Euler.create.fromMatrix4(mat, "YXZ");
 	});
 });

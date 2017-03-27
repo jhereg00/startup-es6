@@ -13,6 +13,24 @@
     background-size:20px 20px;
     background-position:0 0, 10px 10px;
   }
+	#canvasContainer::after {
+		content: '';
+		position: absolute;
+		top: 50%; left: 0; right: 0;
+		height: 1px;
+		background: rgba(0, 255, 255, 1);
+	}
+	#canvasContainer::before {
+		content: '';
+		position: absolute;
+		top: 0; left: 50%; bottom: 0;
+		width: 1px;
+		background: rgba(0, 255, 255, 1);
+	}
+	canvas {
+		display: block;
+		margin: 0 auto;
+	}
   #debug {
     position: absolute;
     left: 0; bottom: 0;

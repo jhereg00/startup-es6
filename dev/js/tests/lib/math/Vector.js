@@ -107,5 +107,12 @@ describe("Vector", function() {
 			expect(v1.magnitude).to.be.greaterThan(.99998);
 			expect(v1.magnitude).to.be.lessThan(1.00002);
 		});
+		it("can be crossed with another vector, if both have length 3", function () {
+			let v1 = new Vector(1, 2, 3);
+			let v2 = new Vector(4, 5, 6);
+			let correct = new Vector(-3, 6, -3);
+			expect(v1.cross(v2)).to.eql(correct);
+			expect(() => v1.cross(new Vector(1, 2))).to.throw();
+		});
 	});
 });

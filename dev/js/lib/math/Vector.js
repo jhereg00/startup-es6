@@ -112,6 +112,19 @@ class Vector {
 		return this.multiply(multiplier);
 	}
 
+	cross (vector) {
+		if (this.length !== 3 || vector.length !== 3) {
+			throw new Error("Vector can only find a cross product if both vectors are length 3");
+		}
+		let A = this._data;
+		let B = vector._data;
+		return new Vector(
+      (A[1] * B[2]) - (A[2] * B[1]),
+      (A[2] * B[0]) - (A[0] * B[2]),
+      (A[0] * B[1]) - (A[1] * B[0])
+    );
+	}
+
 
   // //////
   // get/set
