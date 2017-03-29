@@ -6,6 +6,7 @@ describe("Renderer3d", function () {
 
 	const Object3d = require('lib/gl/3d/Object3d');
 	const Mesh = require('lib/gl/3d/Mesh');
+	const DirectionalLight = require('lib/gl/3d/DirectionalLight');
 
 	let r;
 	before(function () {
@@ -40,5 +41,12 @@ describe("Renderer3d", function () {
 		r.addElement(testObj);
 		expect(r._objects).to.eql([testObj]);
 		expect(r._buffers.vertexPosition.length).to.equal(3);
+	});
+	it("can add lights", function () {
+		let l = new DirectionalLight();
+		r.addElement(l);
+		expect(r._lights.directional).to.exist;
+		expect(r._lights.directional).to.eql([l]);
+		expect(r._lights.totalCount).to.equal(1);
 	});
 });

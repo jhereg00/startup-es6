@@ -28,7 +28,7 @@ class GLFramebuffer {
 		// bind it so we can bind a texture to it
 		this.use();
 		// create the texture and attach it to this buffer
-		this.glTexture = new GLTexture2d(this._gl, null, { size: this.size });
+		this.glTexture = new GLTexture2d(this._gl, null, { size: this.size, dataType: "FLOAT", wrap: "CLAMP_TO_EDGE" });
 		this._gl.framebufferTexture2D(this._gl.FRAMEBUFFER, this._gl.COLOR_ATTACHMENT0, this._gl.TEXTURE_2D, this.glTexture.texture, 0);
 	}
 

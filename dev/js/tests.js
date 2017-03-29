@@ -32,6 +32,8 @@
 // 			require("tests/lib/gl/3d/PerspectiveCamera");
 // 			require("tests/lib/gl/3d/Object3d");
 // 			require("tests/lib/gl/3d/Mesh");
+// 			require("tests/lib/gl/3d/Light");
+// 			require("tests/lib/gl/3d/DirectionalLight");
 // 		});
 // 	});
 // });

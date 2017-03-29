@@ -8,8 +8,11 @@ module.exports = function () {
 	const Renderer3d = require('lib/gl/3d/Renderer3d');
 	const ShaderSource = require('lib/gl/core/ShaderSource');
 	const Box = require('lib/gl/3d/primitives/Box');
+	const Plane = require('lib/gl/3d/primitives/Plane');
 	const Object3d = require('lib/gl/3d/Object3d');
+	const DirectionalLight = require('lib/gl/3d/DirectionalLight');
 	// const PerspectiveCamera = require('lib/gl/3d/PerspectiveCamera');
+	const OrthographicCamera = require('lib/gl/3d/OrthographicCamera');
 
 	ShaderSource.setPathPrepend("/glsl/");
 
@@ -22,28 +25,57 @@ module.exports = function () {
 
 	let cam = scene1.activeCamera;
 	cam.zFar = 1000;
-	cam.moveTo(0, 1, -2);
+	cam.moveTo(1, 3, 4);
 	cam.lookAt(0, 0, 0);
 
 	let boxPile = [];
 	for (let i = 0; i < 10; i++) {
+		let
+			w = Math.random(),
+			h = Math.random(),
+			d = Math.random();
 		boxPile.push(
 			new Object3d({
 				meshes: [
 					new Box({
-						width: Math.random(),
-						height: Math.random(),
-						depth: Math.random()
+						width: w,
+						height: h,
+						depth: d
 					})
 				]
 			}).moveTo(
 				Math.random() * 4 - Math.random() * 2,
-				0,
+				h / 2,
 				Math.random() * 4 - Math.random() * 2
 			)
 		);
 	}
 	boxPile.forEach((box) => scene1.addElement(box));
+	let floor = new Object3d({
+		meshes: [
+			new Plane({
+				width: 40,
+				depth: 40
+			})
+		]
+	});
+	// scene1.addElement(floor);
+
+	let sunLight = new DirectionalLight({
+		direction: [2, 0, 0],
+		ambient: [.4, .4, .46],
+		diffuse: [.6, .6, .54],
+		shadowDistance: 20,
+		bias: .001
+	});
+	sunLight.shadowCamera.width = 8;
+	sunLight.shadowCamera.height = 8;
+	sunLight.moveTo(-2, 1, 0);
+	sunLight.direction = [2, -1, 0];
+	scene1.addElement(sunLight);
+	console.log(sunLight);
+
+	scene1.activeCamera = sunLight.shadowCamera;
 
 	scene1.render();
 
@@ -84,8 +116,11 @@ module.exports = function () {
 	let startTime = performance.now();
 	(function loop () {
 		let deltaTime = (performance.now() - startTime) / 1000;
-		cam.moveTo(Math.sin(deltaTime) * 3, -1, Math.cos(deltaTime) * 3);
-		cam.lookAt(0, 0, 0);
+		// cam.moveTo(Math.sin(deltaTime) * 3, 1, Math.cos(deltaTime) * 3);
+		// cam.lookAt(0, 0, 0);
+		// cam.rotateBy(Math.PI / 200, 0, 0);
+		// sunLight.moveTo(Math.sin(deltaTime / 10) * -6, Math.cos(deltaTime / 10) * -6, .1);
+		// sunLight.direction = [Math.sin(deltaTime / 10), Math.cos(deltaTime / 10), -.1];
 		scene1.render();
 
 		if (performance.now() > loopStartTime) {

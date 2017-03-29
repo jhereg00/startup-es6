@@ -126,6 +126,10 @@ class Box extends Mesh {
 			elements: elements,
 			material: options.material || 'default'
 		});
+
+		this.width = w;
+		this.height = h;
+		this.depth = d;
 	}
 }
 

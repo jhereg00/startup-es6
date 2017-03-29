@@ -45,6 +45,10 @@ class Object3d extends Positionable {
 			objectsByName[this._name] = this;
 		}
 	}
+
+	get normalMatrix () {
+		return this.mvMatrix.inverse().transpose();
+	}
 }
 // statics
 Object3d.getByName = function (name) {

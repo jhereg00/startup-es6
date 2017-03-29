@@ -90,8 +90,6 @@ class GLProgram {
 		this._uniformNames.forEach((name) => {
 			this.uniforms[name] = this._gl.getUniformLocation(this.program, name);
 		});
-
-		console.log('got positions', this, this.a);
 	}
 
 	// public methods
@@ -105,6 +103,13 @@ class GLProgram {
 
 		this._gl.useProgram(this.program);
 		return true;
+	}
+
+	getStructPosition (rootName, index, property) {
+		return this._gl.getUniformLocation(this.program, rootName + '[' + index + '].' + property);
+	}
+	getArrayPosition (rootName, index) {
+		return this._gl.getUniformLocation(this.program, rootName + '[' + index + ']');
 	}
 
 	// alias for attributes and uniforms

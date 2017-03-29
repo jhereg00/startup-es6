@@ -199,7 +199,7 @@ class Positionable {
 			y - this._position.y,
 			z - this._position.z);
 
-		zAxisV = zAxisV.normalize();
+		zAxisV = zAxisV.normalize().multiply(-1);
 		// safety check, as we can get a vector of [0, 0, 0] if the 2 points align in world space
 		if (zAxisV.magnitude < .99) {
 			zAxisV = new Vector(0, 0, -1);
@@ -237,7 +237,7 @@ class Positionable {
 	get mvMatrix () {
 		if (this._needsUpdate.mv) {
 			// getting non '_' versions to make sure they get built if needed
-			this._mvMatrix = this.scaleMatrix.multiply(this.rotationMatrix).multiply(this.positionMatrix);
+			this._mvMatrix = this.scaleMatrix.multiply(this.rotationMatrix).multiply(this.positionMatrix).transpose();
 			this._needsUpdate.mv = false;
 		}
 

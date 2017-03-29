@@ -78,6 +78,10 @@ class Renderer {
 		domElement.appendChild(this.canvas);
 	}
 
+	resetViewport () {
+		this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+	}
+
 	get pixelRatio () {
 		return this._pixelRatio;
 	}

@@ -14,7 +14,7 @@ const extendObject = require("lib/helpers/extendObject");
 const DEFAULTS = {
 	wrap: "REPEAT",
 	minFilter: "NEAREST",
-	magFilter: "LINEAR",
+	magFilter: "NEAREST",
 	width: 1024,
 	height: 1024,
 	format: "RGBA",

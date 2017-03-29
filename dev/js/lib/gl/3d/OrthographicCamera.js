@@ -1,41 +1,34 @@
 /**
- * PerspectiveCamera
+ * OrthographicCamera
  *
  */
 const Positionable = require('lib/gl/3d/Positionable');
-const Frustrum = require('lib/math/Frustrum');
 const Matrix4 = require('lib/math/Matrix4');
 const extendObject = require('lib/helpers/extendObject');
 
 const DEFAULTS = {
-	fov: 35,
-	aspectRatio: 1,
-	zNear: 1,
-	zFar: 11
+	width: 10,
+	height: 10,
+	zFar: 11,
+	zNear: 1
 };
 
-class PerspectiveCamera extends Positionable {
+class OrthographicCamera extends Positionable {
 	constructor (options) {
 		super();
-
-		this._needsUpdate.scale = true;
 		extendObject(this, DEFAULTS, options);
 	}
 
 	_buildPerspective () {
-		let top = this.zNear * Math.tan(this.fov * Math.PI / 360);
-		let bottom = -top;
-		let left = bottom * this.aspectRatio;
-		let right = top * this.aspectRatio;
+		let top = this.height / 2;
+		let right = this.width / 2;
 
-		this.frustrum = new Frustrum({
-			left: left,
-			right: right,
-			top: top,
-			bottom: bottom,
-			near: this.zNear,
-			far: this.zFar
-		});
+		this._perspectiveMatrix = new Matrix4([
+			1 / right, 0, 0, 0,
+			0, 1 / top, 0, 0,
+			0, 0, -2 / (this.zFar - this.zNear), 0,
+			0, 0, -(this.zFar + this.zNear) / (this.zFar - this.zNear), 1
+		]);
 
 		this._needsUpdate.perspective = false;
 		this._needsUpdate.projection = true;
@@ -43,9 +36,8 @@ class PerspectiveCamera extends Positionable {
 
 	_buildProjection () {
 		let mvMatrix = this.mvMatrix;
-		let perspectiveMatrix = this.frustrum.matrix;
 
-		this._projectionMatrix = mvMatrix.multiply(perspectiveMatrix);
+		this._projectionMatrix = mvMatrix.multiply(this._perspectiveMatrix);
 		this._needsUpdate.projection = false;
 	}
 
@@ -63,19 +55,19 @@ class PerspectiveCamera extends Positionable {
 		return this._positionMatrix;
 	}
 
-	get fov () {
-		return this._fov;
+	get width () {
+		return this._width;
 	}
-	set fov (v) {
-		this._fov = v;
+	set width (v) {
+		this._width = v;
 		this._needsUpdate.perspective = true;
 	}
 
-	get aspectRatio () {
-		return this._aspectRatio;
+	get height () {
+		return this._height;
 	}
-	set aspectRatio (v) {
-		this._aspectRatio = v;
+	set height (v) {
+		this._height = v;
 		this._needsUpdate.perspective = true;
 	}
 
@@ -111,4 +103,4 @@ class PerspectiveCamera extends Positionable {
 	}
 }
 
-module.exports = PerspectiveCamera;
+module.exports = OrthographicCamera;
