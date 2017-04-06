@@ -10,7 +10,7 @@ const DEFAULTS = {
 	width: 10,
 	height: 10,
 	zFar: 11,
-	zNear: 1
+	zNear: 0
 };
 
 class OrthographicCamera extends Positionable {
@@ -26,8 +26,8 @@ class OrthographicCamera extends Positionable {
 		this._perspectiveMatrix = new Matrix4([
 			1 / right, 0, 0, 0,
 			0, 1 / top, 0, 0,
-			0, 0, -2 / (this.zFar - this.zNear), 0,
-			0, 0, -(this.zFar + this.zNear) / (this.zFar - this.zNear), 1
+			0, 0, -2 / (this._zFar - this._zNear), 0,
+			0, 0, -(this._zFar + this._zNear) / (this._zFar - this._zNear), 1
 		]);
 
 		this._needsUpdate.perspective = false;

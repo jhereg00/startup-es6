@@ -237,7 +237,7 @@ class Positionable {
 	get mvMatrix () {
 		if (this._needsUpdate.mv) {
 			// getting non '_' versions to make sure they get built if needed
-			this._mvMatrix = this.scaleMatrix.multiply(this.rotationMatrix).multiply(this.positionMatrix).transpose();
+			this._mvMatrix = this.scaleMatrix.multiply(this.rotationMatrix).multiply(this.positionMatrix);
 			this._needsUpdate.mv = false;
 		}
 

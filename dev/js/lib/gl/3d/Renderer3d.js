@@ -20,7 +20,7 @@ class Renderer3d extends Renderer {
     // enable depth testing
 		this.gl.enable(this.gl.DEPTH_TEST);
 		// make nearer things obscure farther things
-		this.gl.depthFunc(this.gl.LESS);
+		this.gl.depthFunc(this.gl.LEQUAL);
 
 		this._maxTextures = this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS);
 
@@ -48,7 +48,10 @@ class Renderer3d extends Renderer {
 		});
 		this._programs.depth = new GLProgram(this.gl, {
 			vertexShader: "forward.vs.glsl",
-			fragmentShader: "depth.fs.glsl"
+			fragmentShader: "depth.fs.glsl",
+			definitions: {
+				ORTHOGRAPHIC_PROJECTION: ''
+			}
 		});
 
 		// depth renderbuffer
@@ -91,7 +94,7 @@ class Renderer3d extends Renderer {
 			return false;
 		this._programs.depth.use();
 		lightProps.shadowMap.use();
-		this.gl.clear(this.gl.DEPTH_BUFFER_BIT);
+		// this.gl.clear(this.gl.DEPTH_BUFFER_BIT);
 		this._buffers.vertexPosition.bindToPosition(this._programs.depth.a.aPosition);
 		this.gl.uniformMatrix4fv(this._programs.depth.u.uProjectionMatrix, false, light.shadowCamera.projectionMatrix.asFloat32());
 		this.gl.uniform3fv(this._programs.depth.u.uCameraPosition, new Float32Array([light._position.x, light._position.y, light._position.z]));
@@ -139,6 +142,7 @@ class Renderer3d extends Renderer {
 			if (this.activeCamera) {
 				// console.log(this._programs.unlit.u.uProjectionMatrix, this.activeCamera.projectionMatrix.asFloat32());
 				this.gl.uniformMatrix4fv(program.u.uProjectionMatrix, false, this.activeCamera.projectionMatrix.asFloat32());
+				this.gl.uniform3fv(program.u.uCameraPosition, new Float32Array([this.activeCamera._position.x, this.activeCamera._position.y, this.activeCamera._position.z]));
 			}
 			this.gl.uniformMatrix4fv(program.u.uMVMatrix, false, obj.mvMatrix.asFloat32());
 			this.gl.uniformMatrix4fv(program.u.uNormalMatrix, false, obj.normalMatrix.asFloat32());

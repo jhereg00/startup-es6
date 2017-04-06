@@ -44,13 +44,13 @@ void main () {
 			vec2 shadowDepth = texture2D(uShadow2d[i], ((light.projectionMatrix * vPos).xy + 1.0) / 2.0).rg;
 			float dist = distance(vPos.xyz, light.position);
 
-			diffuseColor = texture2D(uShadow2d[i], ((light.projectionMatrix * vPos).xy + 1.0) / 2.0).rgb;
+			diffuseColor = vec3(0.1) + texture2D(uShadow2d[i], ((light.projectionMatrix * vPos).xy + 1.0) / 2.0).rgb;
 			// diffuseColor.r = shadowDepth.r / 20.0;
 			// diffuseColor.r = dist / 20.0;
 			// diffuseColor.g = shadowDepth.r / 20.0;
 			// diffuseColor = vec3(sign(shadowDepth.r + light.bias - dist));
 
-			// if (dist < shadowDepth.r || shadowDepth.r == 0.0) {
+			// if (dist < shadowDepth.r + light.bias || shadowDepth.r == 0.0) {
 			// 	// determine diffuse based on light direction vs normal
 			// 	float diffuseValue = clamp(dot(light.direction * -1.0, vNormal), 0.0, 1.0);
 			// 	diffuseColor += diffuseValue * uColor.rgb * (light.diffuse.rgb * light.diffuse.a * light.diffuseIntensity);

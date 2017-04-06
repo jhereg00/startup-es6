@@ -24,6 +24,10 @@ varying vec3 vNormal;
 void main () {
   vec4 worldPosition = uMVMatrix * vec4(aPosition, 1.0);
   gl_Position = uProjectionMatrix * worldPosition;
+	// #ifdef ORTHOGRAPHIC_PROJECTION
+	// 	gl_Position.z = (((2 * gl_Position.z) - 1) + 21.0 / 20.0) * -10.0;
+	// 		// distance(uCameraPosition.xyz, worldPosition.xyz) / 1000.0;
+	// #endif
   vPos = worldPosition;
 
 	#ifdef USE_NORMALS

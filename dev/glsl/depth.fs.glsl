@@ -8,4 +8,5 @@ void main () {
 	float depth = distance(vPos.xyz, uCameraPosition);
 	// gl_FragColor = vec4(depth, depth * depth, 1.0, 1.0);
 	gl_FragColor = vPos;
+	// gl_FragColor = vec4(0.0, 0.0, distance(uCameraPosition, vPos.xyz) / 10.0, 1.0);
 }

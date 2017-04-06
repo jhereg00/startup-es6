@@ -30,13 +30,24 @@ class Matrix4 {
 		else {
 			throw new Error("wrong size Array passed to Matrix4. Expected 16 elements, received " + data.length);
 		}
+
+		this._needsUpdate = true;
 	}
 
 	// /////////
 	// public methods
 	// /////////
 	asFloat32 () {
-		return new Float32Array(this._data);
+		if (this._needsUpdate) {
+			this._float32 = new Float32Array([
+				this._data[0], this._data[4], this._data[8], this._data[12],
+				this._data[1], this._data[5], this._data[9], this._data[13],
+				this._data[2], this._data[6], this._data[10], this._data[14],
+				this._data[3], this._data[7], this._data[11], this._data[15]
+			]);
+			this._needsUpdate = false;
+		}
+		return this._float32;
 	}
 
 	multiply (value) {
@@ -87,53 +98,6 @@ class Matrix4 {
 		return new Matrix4(out);
 	}
 
-	/* KILLING
-	 * It's just too slow, so I'm replacing this with a more rigid function
-	 *
-	 *
-	inverse () {
-		// ok, this shit's complex
-		// I've decided to use the "Adjoint" method for this
-		// first, we need the determinant
-		let det = determinant.det4x4(this._data);
-		if (det === 0) {
-			throw new Error("Attempt to find the inverse of this Matrix failed. Determinant === 0.");
-		}
-
-		// next, we need the cofactor matrix
-		let cofactors = new Array(16);
-		for (let row = 0; row < 4; row++) {
-			for (let column = 0; column < 4; column++) {
-				let subMatrix = [];
-				for (let subRow = 0; subRow < 4; subRow++) {
-					if (subRow === row)
-						continue;
-
-					for (let subCol = 0; subCol < 4; subCol++) {
-						if (subCol === column)
-							continue;
-
-						subMatrix.push(this._data[subRow * 4 + subCol]);
-					}
-				}
-
-				cofactors[row * 4 + column] = determinant.det3x3(subMatrix);
-				if ((row + column) % 2)
-					cofactors[row * 4 + column] *= -1;
-			}
-		}
-
-		// now, transpose it to get the adjoint
-		let out = new Matrix4(cofactors).transpose();
-
-		// multiply by 1/determinant to get the final output
-		out = out.multiply(1 / det);
-
-		return out;
-	}
-	 *
-	 * end function murder
-	 */
 	inverse () {
 		// shamelessly ripped from THREE.js
 		// who ripped it from http://www.euclideanspace.com/maths/algebra/matrix/functions/inverse/fourD/index.htm

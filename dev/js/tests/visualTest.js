@@ -59,23 +59,24 @@ module.exports = function () {
 			})
 		]
 	});
-	// scene1.addElement(floor);
+	scene1.addElement(floor);
 
 	let sunLight = new DirectionalLight({
 		direction: [2, 0, 0],
 		ambient: [.4, .4, .46],
 		diffuse: [.6, .6, .54],
 		shadowDistance: 20,
-		bias: .001
+		bias: .005
 	});
-	sunLight.shadowCamera.width = 8;
-	sunLight.shadowCamera.height = 8;
-	sunLight.moveTo(-2, 1, 0);
-	sunLight.direction = [2, -1, 0];
+	// sunLight.shadowCamera.width = 8;
+	// sunLight.shadowCamera.height = 8;
+	sunLight.moveTo(0, 1, 4);
+	sunLight.direction = [0, 0, -1];
 	scene1.addElement(sunLight);
-	console.log(sunLight);
+	sunLight.shadowCamera.projectionMatrix;
+	// console.log(sunLight.shadowCamera, sunLight.shadowCamera._positionMatrix, sunLight.shadowCamera.mvMatrix, sunLight.shadowCamera._perspectiveMatrix, sunLight.shadowCamera._projectionMatrix);
 
-	scene1.activeCamera = sunLight.shadowCamera;
+	// scene1.activeCamera = sunLight.shadowCamera;
 
 	scene1.render();
 
@@ -121,6 +122,7 @@ module.exports = function () {
 		// cam.rotateBy(Math.PI / 200, 0, 0);
 		// sunLight.moveTo(Math.sin(deltaTime / 10) * -6, Math.cos(deltaTime / 10) * -6, .1);
 		// sunLight.direction = [Math.sin(deltaTime / 10), Math.cos(deltaTime / 10), -.1];
+		// sunLight.moveTo(0, Math.sin(deltaTime / 5), Math.cos(deltaTime / 10) * 4 + 4);
 		scene1.render();
 
 		if (performance.now() > loopStartTime) {
