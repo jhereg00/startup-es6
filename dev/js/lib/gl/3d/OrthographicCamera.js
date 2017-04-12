@@ -10,7 +10,7 @@ const DEFAULTS = {
 	width: 10,
 	height: 10,
 	zFar: 11,
-	zNear: 0
+	zNear: 0.1
 };
 
 class OrthographicCamera extends Positionable {
@@ -26,8 +26,8 @@ class OrthographicCamera extends Positionable {
 		this._perspectiveMatrix = new Matrix4([
 			1 / right, 0, 0, 0,
 			0, 1 / top, 0, 0,
-			0, 0, -2 / (this._zFar - this._zNear), 0,
-			0, 0, -(this._zFar + this._zNear) / (this._zFar - this._zNear), 1
+			0, 0, -2 / (this._zFar - this._zNear), -(this._zFar + this._zNear) / (this._zFar - this._zNear),
+			0, 0, 0, 1
 		]);
 
 		this._needsUpdate.perspective = false;
@@ -37,23 +37,24 @@ class OrthographicCamera extends Positionable {
 	_buildProjection () {
 		let mvMatrix = this.mvMatrix;
 
-		this._projectionMatrix = mvMatrix.multiply(this._perspectiveMatrix);
+		this._projectionMatrix = this._perspectiveMatrix.multiply(mvMatrix.inverse());
+		// this._projectionMatrix = this._perspectiveMatrix;
 		this._needsUpdate.projection = false;
 	}
 
 
 	// getters/setters
-	get positionMatrix () {
-		if (!this._positionMatrix || this._needsUpdate.position) {
-			this._positionMatrix = Matrix4.create.translation(
-				-this._position.x,
-				-this._position.y,
-				-this._position.z
-			);
-			this._needsUpdate.position = false;
-		}
-		return this._positionMatrix;
-	}
+	// get positionMatrix () {
+	// 	if (!this._positionMatrix || this._needsUpdate.position) {
+	// 		this._positionMatrix = Matrix4.create.translation(
+	// 			-this._position.x,
+	// 			-this._position.y,
+	// 			-this._position.z
+	// 		);
+	// 		this._needsUpdate.position = false;
+	// 	}
+	// 	return this._positionMatrix;
+	// }
 
 	get width () {
 		return this._width;

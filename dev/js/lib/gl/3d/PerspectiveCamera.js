@@ -45,23 +45,13 @@ class PerspectiveCamera extends Positionable {
 		let mvMatrix = this.mvMatrix;
 		let perspectiveMatrix = this.frustrum.matrix;
 
-		this._projectionMatrix = mvMatrix.multiply(perspectiveMatrix);
+		// this._projectionMatrix = mvMatrix.multiply(perspectiveMatrix).inverse();
+		this._projectionMatrix = perspectiveMatrix.multiply(mvMatrix.inverse());
 		this._needsUpdate.projection = false;
 	}
 
 
 	// getters/setters
-	get positionMatrix () {
-		if (!this._positionMatrix || this._needsUpdate.position) {
-			this._positionMatrix = Matrix4.create.translation(
-				-this._position.x,
-				-this._position.y,
-				-this._position.z
-			);
-			this._needsUpdate.position = false;
-		}
-		return this._positionMatrix;
-	}
 
 	get fov () {
 		return this._fov;

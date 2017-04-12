@@ -199,18 +199,18 @@ class Positionable {
 			y - this._position.y,
 			z - this._position.z);
 
-		zAxisV = zAxisV.normalize().multiply(-1);
+		zAxisV = zAxisV.normalize();
 		// safety check, as we can get a vector of [0, 0, 0] if the 2 points align in world space
 		if (zAxisV.magnitude < .99) {
 			zAxisV = new Vector(0, 0, -1);
 		}
 
 		// get "up" then cross it with zAxisV to determine x axis
-		let xAxisV = new Vector(
+		let up = new Vector(
 			0, // Math.sin(this._rotation.z),
 			1, // Math.cos(this._rotation.z),
 			0);
-		xAxisV = xAxisV.cross(zAxisV).normalize();
+		let xAxisV = up.cross(zAxisV).normalize();
 		// safety check, as we can get a vector of [0, 0, 0] if the 2 points align in world space
 		if (xAxisV.magnitude < .99) {
 			xAxisV = new Vector(-1, 0, 0);
@@ -222,7 +222,7 @@ class Positionable {
 		this._rotationMatrix = new Matrix4([
 			xAxisV.x, xAxisV.y, xAxisV.z, 0,
 			yAxisV.x, yAxisV.y, yAxisV.z, 0,
-			zAxisV.x, zAxisV.y, zAxisV.z, 0,
+			-zAxisV.x, -zAxisV.y, -zAxisV.z, 0,
 			0, 0, 0, 1
 		]);
 		this._needsUpdate.rotation = false;
@@ -237,7 +237,8 @@ class Positionable {
 	get mvMatrix () {
 		if (this._needsUpdate.mv) {
 			// getting non '_' versions to make sure they get built if needed
-			this._mvMatrix = this.scaleMatrix.multiply(this.rotationMatrix).multiply(this.positionMatrix);
+			// this._mvMatrix = this.scaleMatrix.multiply(this.rotationMatrix).multiply(this.positionMatrix);
+			this._mvMatrix = this.positionMatrix.multiply(this.rotationMatrix).multiply(this.scaleMatrix);
 			this._needsUpdate.mv = false;
 		}
 
