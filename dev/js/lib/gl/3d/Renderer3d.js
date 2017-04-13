@@ -94,7 +94,7 @@ class Renderer3d extends Renderer {
 			return false;
 		this._programs.depth.use();
 		lightProps.shadowMap.use();
-		// this.gl.clear(this.gl.DEPTH_BUFFER_BIT);
+		this.clear();
 		this._buffers.vertexPosition.bindToPosition(this._programs.depth.a.aPosition);
 		this.gl.uniformMatrix4fv(this._programs.depth.u.uProjectionMatrix, false, light.shadowCamera.projectionMatrix.asFloat32());
 		this.gl.uniform3fv(this._programs.depth.u.uCameraPosition, new Float32Array([light._position.x, light._position.y, light._position.z]));

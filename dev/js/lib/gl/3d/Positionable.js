@@ -195,9 +195,9 @@ class Positionable {
 		}
 		// get relative point
 		let zAxisV = new Vector(
-			x - this._position.x,
-			y - this._position.y,
-			z - this._position.z);
+			this._position.x - x,
+			this._position.y - y,
+			this._position.z - z);
 
 		zAxisV = zAxisV.normalize();
 		// safety check, as we can get a vector of [0, 0, 0] if the 2 points align in world space
@@ -222,9 +222,9 @@ class Positionable {
 		this._rotationMatrix = new Matrix4([
 			xAxisV.x, xAxisV.y, xAxisV.z, 0,
 			yAxisV.x, yAxisV.y, yAxisV.z, 0,
-			-zAxisV.x, -zAxisV.y, -zAxisV.z, 0,
+			zAxisV.x, zAxisV.y, zAxisV.z, 0,
 			0, 0, 0, 1
-		]);
+		]).inverse();
 		this._needsUpdate.rotation = false;
 		this._euler = Euler.create.fromMatrix4(this._rotationMatrix, "YXZ");
 		this._rotation.x = this._euler.x;

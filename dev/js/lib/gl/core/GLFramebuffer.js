@@ -30,9 +30,18 @@ class GLFramebuffer {
 		// create the texture and attach it to this buffer
 		this.glTexture = new GLTexture2d(this._gl, null, { size: this.size, dataType: "FLOAT", wrap: "CLAMP_TO_EDGE" });
 		this._gl.framebufferTexture2D(this._gl.FRAMEBUFFER, this._gl.COLOR_ATTACHMENT0, this._gl.TEXTURE_2D, this.glTexture.texture, 0);
+
+		// renderbuffer too
+		this.renderbuffer = this._gl.createRenderbuffer();
+		this._gl.bindRenderbuffer(this._gl.RENDERBUFFER, this.renderbuffer);
+		this._gl.renderbufferStorage(this._gl.RENDERBUFFER, this._gl.DEPTH_COMPONENT16, this.size, this.size);
+		this._gl.framebufferRenderbuffer(this._gl.FRAMEBUFFER, this._gl.DEPTH_ATTACHMENT, this._gl.RENDERBUFFER, this.renderbuffer);
 	}
 
 	use () {
+		if (this.renderbuffer) {
+			this._gl.bindRenderbuffer(this._gl.RENDERBUFFER, this.renderbuffer);
+		}
 		this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, this.framebuffer);
 		this._gl.viewport(0, 0, this.size, this.size);
 	}

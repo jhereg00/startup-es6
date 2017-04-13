@@ -30,7 +30,7 @@ module.exports = function () {
 	// cam.rotateTo(0, Math.PI, 0);
 
 	let boxPile = [];
-	for (let i = 0; i < 0; i++) {
+	for (let i = 0; i < 20; i++) {
 		let
 			w = Math.random(),
 			h = Math.random(),
@@ -51,21 +51,36 @@ module.exports = function () {
 			)
 		);
 	}
-	boxPile.push(
-		new Object3d({
-			meshes: [
-				new Box({
-					width: 1,
-					height: 1,
-					depth: 1
-				})
-			]
-		}).moveTo(
-			1,
-			.5,
-			-2
-		)
-	);
+	// boxPile.push(
+	// 	new Object3d({
+	// 		meshes: [
+	// 			new Box({
+	// 				width: 1,
+	// 				height: 1,
+	// 				depth: 1
+	// 			})
+	// 		]
+	// 	}).moveTo(
+	// 		1,
+	// 		.5,
+	// 		0
+	// 	)
+	// );
+	// boxPile.push(
+	// 	new Object3d({
+	// 		meshes: [
+	// 			new Box({
+	// 				width: 2,
+	// 				height: 2,
+	// 				depth: .5
+	// 			})
+	// 		]
+	// 	}).moveTo(
+	// 		1,
+	// 		1,
+	// 		-1
+	// 	)
+	// );
 	boxPile.forEach((box) => scene1.addElement(box));
 	let floor = new Object3d({
 		meshes: [
@@ -81,8 +96,8 @@ module.exports = function () {
 		direction: [.2, 0, -1],
 		ambient: [.4, .4, .46],
 		diffuse: [.6, .6, .54],
-		shadowDistance: 8,
-		bias: .005
+		shadowDistance: 20,
+		bias: .1
 	});
 	// sunLight.shadowCamera.width = 8;
 	// sunLight.shadowCamera.height = 8;
@@ -135,11 +150,11 @@ module.exports = function () {
 	let startTime = performance.now();
 	(function loop () {
 		let deltaTime = (performance.now() - startTime) / 1000;
-		cam.moveTo(Math.sin(deltaTime) * 3, 1, Math.cos(deltaTime) * 3);
-		cam.lookAt(0, 0, 0);
-		// cam.rotateBy(Math.PI / 200, 0, 0);
-		// sunLight.moveTo(Math.sin(deltaTime / 10) * -6, Math.cos(deltaTime / 10) * -6, .1);
-		// sunLight.direction = [Math.sin(deltaTime / 10), Math.cos(deltaTime / 10), -.1];
+		// cam.moveTo(Math.sin(deltaTime) * 8, 1, Math.cos(deltaTime) * 8);
+		// cam.lookAt(0, 0, 0);
+		// cam.rotateBy(0, Math.PI / 200, 0, 0);
+		sunLight.moveTo(Math.sin(deltaTime / 10) * -4, Math.cos(deltaTime / 10) * -4, .5);
+		sunLight.direction = [Math.sin(deltaTime / 10) * 4, Math.cos(deltaTime / 10) * 4, -.5];
 		// sunLight.moveTo(0, Math.sin(deltaTime / 5), Math.cos(deltaTime / 10) * 4 + 4);
 		// cam.rotateBy(0, Math.PI / 60, 0);
 		scene1.render();
