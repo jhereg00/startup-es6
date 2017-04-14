@@ -77,7 +77,7 @@ class ShaderSource {
 			// check that the compile worked
 			if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
 				var info = gl.getShaderInfoLog(shader);
-				reject(new Error('Could not compile WebGLShader. \n\n' + info));
+				reject(new Error('Could not compile WebGLShader. \n\n' + this.path + '\n\n' + info));
 			}
 
 			resolve(shader);

@@ -61,6 +61,7 @@ class Renderer3d extends Renderer {
 
 		// extensions
 		this.gl.getExtension('OES_texture_float');
+		this.gl.getExtension('OES_standard_derivatives');
 	}
 
 
@@ -182,6 +183,9 @@ class Renderer3d extends Renderer {
 							this.gl.uniform1i(
 								program.getArrayPosition('uShadow2d', shadowIndex++),
 								textureIndex);
+							this.gl.uniform1i(
+								program.getStructPosition(uniformName, uniformIndex, 'shadowMapSize'),
+								props.shadowMap.size);
 							this.gl.activeTexture(this.gl['TEXTURE' + textureIndex]);
 							props.shadowMap.glTexture.bind();
 							break;
@@ -219,8 +223,11 @@ class Renderer3d extends Renderer {
 						light.specularIntensity);
 
 					this.gl.uniform1f(
-						program.getStructPosition(uniformName, uniformIndex, 'shadowHardness'),
-						light.shadowHardness);
+						program.getStructPosition(uniformName, uniformIndex, 'minShadowBlur'),
+						light.minShadowBlur);
+					this.gl.uniform1f(
+						program.getStructPosition(uniformName, uniformIndex, 'maxShadowBlur'),
+						light.maxShadowBlur);
 
 					this.gl.uniform1f(
 						program.getStructPosition(uniformName, uniformIndex, 'shadowDistance'),
@@ -248,6 +255,7 @@ class Renderer3d extends Renderer {
 		this._buffers.elements.bind();
 		// draw shadowmaps
 		this.gl.disable(this.gl.BLEND);
+		this.gl.clearColor(1.0, 1.0, 1.0, 1.0);
 		this._lights.forEach((light) => {
 			if (light.type === 'directional' || light.type === 'spot')
 				this.draw2dShadowMap(light);
@@ -257,6 +265,8 @@ class Renderer3d extends Renderer {
 		this.gl.enable(this.gl.BLEND);
 		this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
 		this.resetViewport();
+		this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
+		this.clear();
 		this._objects.forEach((obj) => this.forwardRenderObject(obj));
 		// for each transparent object, forward render it
 

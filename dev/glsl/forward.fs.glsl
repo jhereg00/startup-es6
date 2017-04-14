@@ -18,6 +18,9 @@ uniform struct DirectionalLight {
 
   float bias;
 	int shadowMap;
+	int shadowMapSize;
+	float minShadowBlur;
+	float maxShadowBlur;
 	float shadowDistance;
 	mat4 projectionMatrix;
 } uDirectionalLights [MAX_LIGHTS];
@@ -27,6 +30,39 @@ uniform sampler2D uShadow2d [MAX_LIGHTS];
 
 // material values
 uniform vec4 uColor;
+
+#ifndef SHADOW_BLUR_SAMPLES
+	const int SHADOW_BLUR_SAMPLES = 4;
+#endif
+
+float percentageLit (float testDepth, sampler2D shadowMap, vec2 sampleLocation, vec2 pixelSize, float minBlur, float maxBlur, float shadowDistance) {
+	// start by getting our moments
+	vec2 moments = vec2(0.0);
+	float texelSize = (testDepth - texture2D(shadowMap, sampleLocation).r) / shadowDistance * maxBlur;
+	texelSize = max(minBlur, texelSize);
+
+	// moments will be an average using a basic box blur
+	for (int y = -SHADOW_BLUR_SAMPLES; y <= SHADOW_BLUR_SAMPLES; ++y) {
+		for (int x = -SHADOW_BLUR_SAMPLES; x <= SHADOW_BLUR_SAMPLES; ++x) {
+			// determine where to sample from for now based on blur size
+			vec2 offset = sampleLocation + vec2(float(x) * texelSize * pixelSize.x, float(y) * texelSize * pixelSize.y);
+			vec4 texSample = texture2D(shadowMap, offset);
+			moments.x += texSample.x;
+			moments.y += texSample.y;
+		}
+	}
+	moments.x /= pow(float(SHADOW_BLUR_SAMPLES) * 2.0 + 1.0, 2.0);
+	moments.y /= pow(float(SHADOW_BLUR_SAMPLES) * 2.0 + 1.0, 2.0);
+
+	// use Chebyshev's formula to determine probability of fragment being lit
+	float p = (testDepth <= moments.x) ? 1.0 : 0.0;
+	// find variance
+	float variance = moments.y - (moments.x * moments.x);
+
+	float d = testDepth - moments.x;
+	float pMax = variance / (variance + d * d);
+	return clamp(max(p, pMax), 0.0, 1.0);
+}
 
 void main () {
 	vec3 ambientColor = vec3(0.0);
@@ -41,8 +77,22 @@ void main () {
 			// ambientColor = vPos.xyz / 10.0;
 
 			// see if we're in shadow
-			vec2 shadowDepth = texture2D(uShadow2d[i], ((light.projectionMatrix * vPos).xy + 1.0) / 2.0).rg;
+			// vec2 shadowDepth = texture2D(uShadow2d[i], ((light.projectionMatrix * vPos).xy + 1.0) / 2.0).rg;
 			float dist = distance(vPos.xyz, light.position);
+
+			// diffuseColor = vec3(
+			// 	percentageLit(
+			// 		dist,
+			// 		uShadow2d[i],
+			// 		((light.projectionMatrix * vPos).xy + 1.0) / 2.0,
+			// 		vec2(1.0) / float(light.shadowMapSize),
+			// 		light.minShadowBlur,
+			// 		light.maxShadowBlur,
+			// 		light.shadowDistance
+			// 	)
+			// );
+
+			// diffuseColor = vec3(vec2(1.0) / float(light.shadowMapSize), 0.0);
 
 			// diffuseColor = vec3(0.1) + texture2D(uShadow2d[i], ((light.projectionMatrix * vPos).xy + 1.0) / 2.0).rgb;
 			// diffuseColor = vec3(0.0) + texture2D(uShadow2d[i], ((light.projectionMatrix * vPos).xy + 1.0) / 2.0).rgb;
@@ -54,11 +104,25 @@ void main () {
 			// diffuseColor.g = shadowDepth.r / 20.0;
 			// diffuseColor = vec3(sign(shadowDepth.r + light.bias - dist));
 
-			if (dist < shadowDepth.r + light.bias || shadowDepth.r == 0.0) {
-				// determine diffuse based on light direction vs normal
-				float diffuseValue = clamp(dot(light.direction * -1.0, vNormal), 0.0, 1.0);
-				diffuseColor += diffuseValue * uColor.rgb * (light.diffuse.rgb * light.diffuse.a * light.diffuseIntensity);
-			}
+			// if (dist < shadowDepth.r + light.bias || shadowDepth.r == 0.0) {
+			// 	// determine diffuse based on light direction vs normal
+			// 	float diffuseValue = clamp(dot(light.direction * -1.0, vNormal), 0.0, 1.0);
+			// 	diffuseColor += diffuseValue * uColor.rgb * (light.diffuse.rgb * light.diffuse.a * light.diffuseIntensity);
+			// }
+
+			float shading = percentageLit(
+				dist,
+				uShadow2d[i],
+				((light.projectionMatrix * vPos).xy + 1.0) / 2.0,
+				vec2(1.0) / float(light.shadowMapSize),
+				light.minShadowBlur,
+				light.maxShadowBlur,
+				light.shadowDistance
+			);
+
+			float diffuseValue = clamp(dot(light.direction * -1.0, vNormal), 0.0, 1.0);
+			diffuseColor += shading * diffuseValue * uColor.rgb * (light.diffuse.rgb * light.diffuse.a * light.diffuseIntensity);
+
 		}
 	}
 

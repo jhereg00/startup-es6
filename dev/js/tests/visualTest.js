@@ -25,7 +25,7 @@ module.exports = function () {
 
 	let cam = scene1.activeCamera;
 	cam.zFar = 1000;
-	cam.moveTo(1, 4, 18);
+	cam.moveTo(1, 4, 10);
 	cam.lookAt(0, 0, 0);
 	// cam.rotateTo(0, Math.PI, 0);
 
@@ -97,7 +97,10 @@ module.exports = function () {
 		ambient: [.4, .4, .46],
 		diffuse: [.6, .6, .54],
 		shadowDistance: 20,
-		bias: .1
+		bias: .1,
+		minShadowBlur: 0.5,
+		maxShadowBlur: 16,
+		shadowResolution: 1024
 	});
 	// sunLight.shadowCamera.width = 8;
 	// sunLight.shadowCamera.height = 8;
@@ -154,7 +157,7 @@ module.exports = function () {
 		// cam.lookAt(0, 0, 0);
 		// cam.rotateBy(0, Math.PI / 200, 0, 0);
 		sunLight.moveTo(Math.sin(deltaTime / 10) * -4, Math.cos(deltaTime / 10) * -4, .5);
-		sunLight.direction = [Math.sin(deltaTime / 10) * 4, Math.cos(deltaTime / 10) * 4, -.5];
+		sunLight.direction = [Math.sin(deltaTime / 10) * 4, Math.cos(deltaTime / 10) * 4, -2];
 		// sunLight.moveTo(0, Math.sin(deltaTime / 5), Math.cos(deltaTime / 10) * 4 + 4);
 		// cam.rotateBy(0, Math.PI / 60, 0);
 		scene1.render();

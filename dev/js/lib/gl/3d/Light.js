@@ -21,7 +21,8 @@ const DEFAULTS = {
 	specular: [1, 1, 1, 1],
 	specularIntensity: 1,
 	castsShadows: true,
-	shadowHardness: 10,
+	minShadowBlur: 1,
+	maxShadowBlur: 4,
 	bias: .05,
 	shadowResolution: 1024
 };
