@@ -139,7 +139,9 @@ class Positionable {
 		this._rotation.x = euler.x;
 		this._rotation.y = euler.y;
 		this._rotation.z = euler.z;
+		this._euler.order = euler.order;
 		this._needsUpdate.rotation = true;
+		return this;
 	}
 	get rotationMatrix () {
 		if (!this._rotationMatrix || this._needsUpdate.rotation) {

@@ -13,7 +13,8 @@ module.exports = function () {
 	const Material = require('lib/gl/3d/Material');
 	const DirectionalLight = require('lib/gl/3d/DirectionalLight');
 	// const PerspectiveCamera = require('lib/gl/3d/PerspectiveCamera');
-	const OrthographicCamera = require('lib/gl/3d/OrthographicCamera');
+	// const OrthographicCamera = require('lib/gl/3d/OrthographicCamera');
+	const Euler = require('lib/math/Euler');
 
 	ShaderSource.setPathPrepend("/glsl/");
 
@@ -26,41 +27,47 @@ module.exports = function () {
 
 	let cam = scene1.activeCamera;
 	cam.zFar = 1000;
-	cam.moveTo(1, 4, 10);
-	cam.lookAt(0, 0, 0);
+	cam.moveTo(1, 1, 10);
+	// cam.lookAt(0, 0, 0);
 	// cam.rotateTo(0, Math.PI, 0);
 
-	let boxPile = [];
-	for (let i = 0; i < 20; i++) {
-		let
-			w = Math.random(),
-			h = Math.random(),
-			d = Math.random(),
-			r = Math.random() * .5 + .5,
-			g = Math.random() * .5 + .5,
-			b = Math.random() * .5 + .5;
-		boxPile.push(
-			new Object3d({
-				meshes: [
-					new Box({
-						width: w,
-						height: h,
-						depth: d,
-						material: new Material({
-							color: [r * .85, g * .85, b * .85, 1],
-							specularColor: [r, g, b, 1],
-							specularity: Math.random(),
-							specularExponent: (2 << (Math.floor(Math.random() * 4 + 4)))
-						})
-					})
-				]
-			}).moveTo(
-				Math.random() * 4 - Math.random() * 2,
-				h / 2,
-				Math.random() * 4 - Math.random() * 2
-			)
-		);
-	}
+	// let boxPile = [];
+	// let materials = [
+	// 	new Material({
+	// 		color: [1, 0, 0, 1]
+	// 	}),
+	// 	new Material({
+	// 		color: [0, .7, 0, 1],
+	// 		specularColor: [1, 1, 0, 1],
+	// 		specularity: 1.2
+	// 	}),
+	// 	new Material({
+	// 		color: [0, 0, .8, 1],
+	// 		specularity: 1
+	// 	})
+	// ];
+	// for (let i = 0; i < 50; i++) {
+	// 	let
+	// 		w = Math.random(),
+	// 		h = Math.random(),
+	// 		d = Math.random();
+	// 	boxPile.push(
+	// 		new Object3d({
+	// 			meshes: [
+	// 				new Box({
+	// 					width: w,
+	// 					height: h,
+	// 					depth: d,
+	// 					material: materials[i % materials.length]
+	// 				})
+	// 			]
+	// 		}).moveTo(
+	// 			Math.random() * 4 - Math.random() * 2,
+	// 			h / 2,
+	// 			Math.random() * 4 - Math.random() * 2
+	// 		)
+	// 	);
+	// }
 	// boxPile.push(
 	// 	new Object3d({
 	// 		meshes: [
@@ -99,7 +106,7 @@ module.exports = function () {
 	// 		-1
 	// 	)
 	// );
-	boxPile.forEach((box) => scene1.addElement(box));
+	// boxPile.forEach((box) => scene1.addElement(box));
 	let floor = new Object3d({
 		meshes: [
 			new Plane({
@@ -113,6 +120,25 @@ module.exports = function () {
 		]
 	});
 	scene1.addElement(floor);
+
+	let magicBox = new Object3d({
+		meshes: [
+			new Box({
+				width: 1,
+				height: 1,
+				depth: 1,
+				material: new Material({
+					color: [0, .4, .9, 1],
+					specularity: 1,
+					specularColor: [.5, .8, 1, 1]
+				})
+			})
+		]
+	}).moveTo(0, 1, 0)
+		.setRotationFromEuler(new Euler(Math.PI / 5, 0, Math.PI / 4, "YZX"));
+	window.magicBox = magicBox;
+
+	scene1.addElement(magicBox);
 
 	let sunLight = new DirectionalLight({
 		direction: [.2, 0, -1],
@@ -177,12 +203,13 @@ module.exports = function () {
 	(function loop () {
 		let deltaTime = (performance.now() - startTime) / 1000;
 		cam.moveTo(Math.sin(deltaTime) * 8, 3, Math.cos(deltaTime) * 8);
-		cam.lookAt(0, 0, 0);
+		cam.lookAt(0, 1, 0);
 		// cam.rotateBy(0, Math.PI / 200, 0, 0);
 		sunLight.moveTo(Math.sin(deltaTime / 10) * -4, Math.cos(deltaTime / 10) * -4, .5);
 		sunLight.direction = [Math.sin(deltaTime / 10) * 4, Math.cos(deltaTime / 10) * 4, -2];
 		// sunLight.moveTo(0, Math.sin(deltaTime / 5), Math.cos(deltaTime / 10) * 4 + 4);
 		// cam.rotateBy(0, Math.PI / 60, 0);
+		magicBox.rotateBy(0, Math.PI / 100, 0);
 		scene1.render();
 
 		if (performance.now() > loopStartTime) {
