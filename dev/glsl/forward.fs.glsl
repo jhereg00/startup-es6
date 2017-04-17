@@ -28,8 +28,12 @@ uniform int uNumDirectionalLights;
 
 uniform sampler2D uShadow2d [MAX_LIGHTS];
 
+uniform vec3 uCameraPosition;
+
 // material values
 uniform vec4 uColor;
+uniform vec4 uSpecularColor;
+uniform float uSpecularExponent;
 
 #ifndef SHADOW_BLUR_SAMPLES
 	const int SHADOW_BLUR_SAMPLES = 4;
@@ -69,6 +73,8 @@ void main () {
 	vec3 diffuseColor = vec3(0.0);
 	vec3 specularColor = vec3(0.0);
 
+	vec3 viewDir = normalize(uCameraPosition - vPos.xyz);
+
 	for (int i = 0; i < MAX_LIGHTS; i++) {
 		// do directional
 		if (i < uNumDirectionalLights) {
@@ -77,39 +83,7 @@ void main () {
 			// ambientColor = vPos.xyz / 10.0;
 
 			// see if we're in shadow
-			// vec2 shadowDepth = texture2D(uShadow2d[i], ((light.projectionMatrix * vPos).xy + 1.0) / 2.0).rg;
 			float dist = distance(vPos.xyz, light.position);
-
-			// diffuseColor = vec3(
-			// 	percentageLit(
-			// 		dist,
-			// 		uShadow2d[i],
-			// 		((light.projectionMatrix * vPos).xy + 1.0) / 2.0,
-			// 		vec2(1.0) / float(light.shadowMapSize),
-			// 		light.minShadowBlur,
-			// 		light.maxShadowBlur,
-			// 		light.shadowDistance
-			// 	)
-			// );
-
-			// diffuseColor = vec3(vec2(1.0) / float(light.shadowMapSize), 0.0);
-
-			// diffuseColor = vec3(0.1) + texture2D(uShadow2d[i], ((light.projectionMatrix * vPos).xy + 1.0) / 2.0).rgb;
-			// diffuseColor = vec3(0.0) + texture2D(uShadow2d[i], ((light.projectionMatrix * vPos).xy + 1.0) / 2.0).rgb;
-			// diffuseColor = vPos.rgb;
-			// diffuseColor.r = shadowDepth.r / 12.0;
-			// diffuseColor.g = dist / 12.0;
-			// diffuseColor.b = dist / 12.0;
-			// diffuseColor.r = dist / 20.0;
-			// diffuseColor.g = shadowDepth.r / 20.0;
-			// diffuseColor = vec3(sign(shadowDepth.r + light.bias - dist));
-
-			// if (dist < shadowDepth.r + light.bias || shadowDepth.r == 0.0) {
-			// 	// determine diffuse based on light direction vs normal
-			// 	float diffuseValue = clamp(dot(light.direction * -1.0, vNormal), 0.0, 1.0);
-			// 	diffuseColor += diffuseValue * uColor.rgb * (light.diffuse.rgb * light.diffuse.a * light.diffuseIntensity);
-			// }
-
 			float shading = percentageLit(
 				dist,
 				uShadow2d[i],
@@ -123,6 +97,11 @@ void main () {
 			float diffuseValue = clamp(dot(light.direction * -1.0, vNormal), 0.0, 1.0);
 			diffuseColor += shading * diffuseValue * uColor.rgb * (light.diffuse.rgb * light.diffuse.a * light.diffuseIntensity);
 
+      // do blinn-phong specular highlights
+      vec3 halfDir = normalize(light.direction * -1.0 + viewDir);
+      float specAngle = max(dot(halfDir, vNormal), 0.0);
+      vec3 specOut = (light.specular.rgb * pow(specAngle, uSpecularExponent / 100.0 * 32.0)) * light.specular.a * light.specularIntensity;
+			specularColor += shading * specOut * uSpecularColor.rgb * uSpecularColor.a;
 		}
 	}
 

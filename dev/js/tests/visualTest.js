@@ -90,7 +90,7 @@ module.exports = function () {
 			})
 		]
 	});
-	// scene1.addElement(floor);
+	scene1.addElement(floor);
 
 	let sunLight = new DirectionalLight({
 		direction: [.2, 0, -1],

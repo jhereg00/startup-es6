@@ -20,6 +20,7 @@ const DEFAULTS = {
 	diffuseIntensity: 1,
 	specular: [1, 1, 1, 1],
 	specularIntensity: 1,
+	specularExponent: 32,
 	castsShadows: true,
 	minShadowBlur: 1,
 	maxShadowBlur: 4,
