@@ -21,6 +21,7 @@ class Renderer3d extends Renderer {
 		this.gl.enable(this.gl.DEPTH_TEST);
 		// make nearer things obscure farther things
 		this.gl.depthFunc(this.gl.LEQUAL);
+		this.gl.enable(this.gl.CULL_FACE);
 
 		this._maxTextures = this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS);
 

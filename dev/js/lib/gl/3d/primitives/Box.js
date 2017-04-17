@@ -34,9 +34,9 @@ class Box extends Mesh {
 			-w / 2, -h / 2, d / 2,
 
 			w / 2, h / 2, d / 2,
-			w / 2, h / 2, -d / 2,
+			w / 2, -h / 2, d / 2,
 			w / 2, -h / 2, -d / 2,
-			w / 2, -h / 2, d / 2
+			w / 2, h / 2, -d / 2
 		);
 		normals.push(
 			-1, 0, 0,
@@ -65,9 +65,9 @@ class Box extends Mesh {
 			-w / 2, -h / 2, -d / 2,
 
 			-w / 2, h / 2, d / 2,
-			w / 2, h / 2, d / 2,
-			w / 2, -h / 2, d / 2,
 			-w / 2, -h / 2, d / 2,
+			w / 2, -h / 2, d / 2,
+			w / 2, h / 2, d / 2,
 		);
 		normals.push(
 			0, 0, -1,
@@ -96,9 +96,9 @@ class Box extends Mesh {
 			-w / 2, h / 2, -d / 2,
 
 			-w / 2, -h / 2, d / 2,
-			w / 2, -h / 2, d / 2,
+			-w / 2, -h / 2, -d / 2,
 			w / 2, -h / 2, -d / 2,
-			-w / 2, -h / 2, -d / 2
+			w / 2, -h / 2, d / 2
 		);
 		normals.push(
 			0, 1, 0,

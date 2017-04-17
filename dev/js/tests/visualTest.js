@@ -30,7 +30,7 @@ module.exports = function () {
 	// cam.rotateTo(0, Math.PI, 0);
 
 	let boxPile = [];
-	for (let i = 0; i < 20; i++) {
+	for (let i = 0; i < 0; i++) {
 		let
 			w = Math.random(),
 			h = Math.random(),
@@ -51,36 +51,36 @@ module.exports = function () {
 			)
 		);
 	}
-	// boxPile.push(
-	// 	new Object3d({
-	// 		meshes: [
-	// 			new Box({
-	// 				width: 1,
-	// 				height: 1,
-	// 				depth: 1
-	// 			})
-	// 		]
-	// 	}).moveTo(
-	// 		1,
-	// 		.5,
-	// 		0
-	// 	)
-	// );
-	// boxPile.push(
-	// 	new Object3d({
-	// 		meshes: [
-	// 			new Box({
-	// 				width: 2,
-	// 				height: 2,
-	// 				depth: .5
-	// 			})
-	// 		]
-	// 	}).moveTo(
-	// 		1,
-	// 		1,
-	// 		-1
-	// 	)
-	// );
+	boxPile.push(
+		new Object3d({
+			meshes: [
+				new Box({
+					width: 1,
+					height: 1,
+					depth: 1
+				})
+			]
+		}).moveTo(
+			1,
+			.5,
+			0
+		)
+	);
+	boxPile.push(
+		new Object3d({
+			meshes: [
+				new Box({
+					width: 2,
+					height: 2,
+					depth: .5
+				})
+			]
+		}).moveTo(
+			1,
+			1,
+			-1
+		)
+	);
 	boxPile.forEach((box) => scene1.addElement(box));
 	let floor = new Object3d({
 		meshes: [
@@ -90,7 +90,7 @@ module.exports = function () {
 			})
 		]
 	});
-	scene1.addElement(floor);
+	// scene1.addElement(floor);
 
 	let sunLight = new DirectionalLight({
 		direction: [.2, 0, -1],
@@ -99,8 +99,8 @@ module.exports = function () {
 		shadowDistance: 20,
 		bias: .1,
 		minShadowBlur: 0.5,
-		maxShadowBlur: 16,
-		shadowResolution: 1024
+		maxShadowBlur: 0.5,
+		shadowResolution: 2048
 	});
 	// sunLight.shadowCamera.width = 8;
 	// sunLight.shadowCamera.height = 8;
@@ -153,8 +153,8 @@ module.exports = function () {
 	let startTime = performance.now();
 	(function loop () {
 		let deltaTime = (performance.now() - startTime) / 1000;
-		// cam.moveTo(Math.sin(deltaTime) * 8, 1, Math.cos(deltaTime) * 8);
-		// cam.lookAt(0, 0, 0);
+		cam.moveTo(Math.sin(deltaTime) * 8, Math.sin(deltaTime / 2) * 3, Math.cos(deltaTime) * 8);
+		cam.lookAt(0, 0, 0);
 		// cam.rotateBy(0, Math.PI / 200, 0, 0);
 		sunLight.moveTo(Math.sin(deltaTime / 10) * -4, Math.cos(deltaTime / 10) * -4, .5);
 		sunLight.direction = [Math.sin(deltaTime / 10) * 4, Math.cos(deltaTime / 10) * 4, -2];
