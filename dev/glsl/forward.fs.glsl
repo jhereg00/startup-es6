@@ -34,6 +34,7 @@ uniform vec3 uCameraPosition;
 uniform vec4 uColor;
 uniform vec4 uSpecularColor;
 uniform float uSpecularExponent;
+uniform float uSpecularity;
 
 #ifndef SHADOW_BLUR_SAMPLES
 	const int SHADOW_BLUR_SAMPLES = 4;
@@ -101,7 +102,7 @@ void main () {
       vec3 halfDir = normalize(light.direction * -1.0 + viewDir);
       float specAngle = max(dot(halfDir, vNormal), 0.0);
       vec3 specOut = (light.specular.rgb * pow(specAngle, uSpecularExponent / 100.0 * 32.0)) * light.specular.a * light.specularIntensity;
-			specularColor += shading * specOut * uSpecularColor.rgb * uSpecularColor.a;
+			specularColor += shading * specOut * uSpecularColor.rgb * uSpecularColor.a * uSpecularity;
 		}
 	}
 

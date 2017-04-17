@@ -149,9 +149,10 @@ class Renderer3d extends Renderer {
 			this.gl.uniformMatrix4fv(program.u.uMVMatrix, false, obj.mvMatrix.asFloat32());
 			this.gl.uniformMatrix4fv(program.u.uNormalMatrix, false, obj.normalMatrix.asFloat32());
 			// temp
-			this.gl.uniform4fv(program.u.uColor, [.7, .8, .5, 1]);
-			this.gl.uniform4fv(program.u.uSpecularColor, [1, 0, 0, 1]);
-			this.gl.uniform1f(program.u.uSpecularExponent, 64);
+			this.gl.uniform4fv(program.u.uColor, new Float32Array(material.color));
+			this.gl.uniform4fv(program.u.uSpecularColor, new Float32Array(material.specularColor));
+			this.gl.uniform1f(program.u.uSpecularExponent, material.specularExponent);
+			this.gl.uniform1f(program.u.uSpecularity, material.specularity);
 
 			// bind as many lights as we can, then do a pass.  Keep going if needed
 			let inc = this._maxTextures - usedTextures;

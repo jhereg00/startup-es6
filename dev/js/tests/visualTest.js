@@ -10,6 +10,7 @@ module.exports = function () {
 	const Box = require('lib/gl/3d/primitives/Box');
 	const Plane = require('lib/gl/3d/primitives/Plane');
 	const Object3d = require('lib/gl/3d/Object3d');
+	const Material = require('lib/gl/3d/Material');
 	const DirectionalLight = require('lib/gl/3d/DirectionalLight');
 	// const PerspectiveCamera = require('lib/gl/3d/PerspectiveCamera');
 	const OrthographicCamera = require('lib/gl/3d/OrthographicCamera');
@@ -30,18 +31,27 @@ module.exports = function () {
 	// cam.rotateTo(0, Math.PI, 0);
 
 	let boxPile = [];
-	for (let i = 0; i < 0; i++) {
+	for (let i = 0; i < 20; i++) {
 		let
 			w = Math.random(),
 			h = Math.random(),
-			d = Math.random();
+			d = Math.random(),
+			r = Math.random() * .5 + .5,
+			g = Math.random() * .5 + .5,
+			b = Math.random() * .5 + .5;
 		boxPile.push(
 			new Object3d({
 				meshes: [
 					new Box({
 						width: w,
 						height: h,
-						depth: d
+						depth: d,
+						material: new Material({
+							color: [r * .85, g * .85, b * .85, 1],
+							specularColor: [r, g, b, 1],
+							specularity: Math.random(),
+							specularExponent: (2 << (Math.floor(Math.random() * 4 + 4)))
+						})
 					})
 				]
 			}).moveTo(
@@ -51,42 +61,54 @@ module.exports = function () {
 			)
 		);
 	}
-	boxPile.push(
-		new Object3d({
-			meshes: [
-				new Box({
-					width: 1,
-					height: 1,
-					depth: 1
-				})
-			]
-		}).moveTo(
-			1,
-			.5,
-			0
-		)
-	);
-	boxPile.push(
-		new Object3d({
-			meshes: [
-				new Box({
-					width: 2,
-					height: 2,
-					depth: .5
-				})
-			]
-		}).moveTo(
-			1,
-			1,
-			-1
-		)
-	);
+	// boxPile.push(
+	// 	new Object3d({
+	// 		meshes: [
+	// 			new Box({
+	// 				width: 1,
+	// 				height: 1,
+	// 				depth: 1,
+	// 				material: new Material ({
+	// 					color: [Math.random() / 2 + .5, Math.random() / 2 + .5, Math.random() / 2 + .5, 1],
+	// 					specularity: Math.random()
+	// 				})
+	// 			})
+	// 		]
+	// 	}).moveTo(
+	// 		1,
+	// 		.5,
+	// 		0
+	// 	)
+	// );
+	// boxPile.push(
+	// 	new Object3d({
+	// 		meshes: [
+	// 			new Box({
+	// 				width: 2,
+	// 				height: 2,
+	// 				depth: .5,
+	// 				material: new Material ({
+	// 					color: [Math.random() / 2 + .5, Math.random() / 2 + .5, Math.random() / 2 + .5, 1],
+	// 					specularity: 1
+	// 				})
+	// 			})
+	// 		],
+	// 	}).moveTo(
+	// 		1,
+	// 		1,
+	// 		-1
+	// 	)
+	// );
 	boxPile.forEach((box) => scene1.addElement(box));
 	let floor = new Object3d({
 		meshes: [
 			new Plane({
 				width: 40,
-				depth: 40
+				depth: 40,
+				material: new Material({
+					color: [.4, .4, .4, 1],
+					specularity: .2
+				})
 			})
 		]
 	});
@@ -96,6 +118,7 @@ module.exports = function () {
 		direction: [.2, 0, -1],
 		ambient: [.4, .4, .46],
 		diffuse: [.6, .6, .54],
+		specular: [1, .8, .4, 1],
 		shadowDistance: 20,
 		bias: .1,
 		minShadowBlur: 0.5,
@@ -153,7 +176,7 @@ module.exports = function () {
 	let startTime = performance.now();
 	(function loop () {
 		let deltaTime = (performance.now() - startTime) / 1000;
-		cam.moveTo(Math.sin(deltaTime) * 8, Math.sin(deltaTime / 2) * 3, Math.cos(deltaTime) * 8);
+		cam.moveTo(Math.sin(deltaTime) * 8, 3, Math.cos(deltaTime) * 8);
 		cam.lookAt(0, 0, 0);
 		// cam.rotateBy(0, Math.PI / 200, 0, 0);
 		sunLight.moveTo(Math.sin(deltaTime / 10) * -4, Math.cos(deltaTime / 10) * -4, .5);

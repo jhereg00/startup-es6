@@ -3,7 +3,12 @@
  */
 const extendObject = require('lib/helpers/extendObject');
 
-const DEFAULTS = {};
+const DEFAULTS = {
+	color: [.8, .8, .8, 1],
+	specularColor: [1, 1, 1, 1],
+	specularity: 0,
+	specularExponent: 16
+};
 
 let materialsByName = {};
 
