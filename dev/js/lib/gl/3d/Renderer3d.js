@@ -6,6 +6,7 @@ const Renderer = require('lib/gl/core/Renderer');
 const GLBuffer = require('lib/gl/core/GLBuffer');
 const GLProgram = require('lib/gl/core/GLProgram');
 const GLFramebuffer = require('lib/gl/core/GLFramebuffer');
+const GLCubeFramebuffer = require('lib/gl/core/GLCubeFramebuffer');
 const PerspectiveCamera = require('lib/gl/3d/PerspectiveCamera');
 const Object3d = require('lib/gl/3d/Object3d');
 const Light = require('lib/gl/3d/Light');
@@ -102,7 +103,26 @@ class Renderer3d extends Renderer {
 		this.gl.uniform3fv(this._programs.depth.u.uCameraPosition, new Float32Array([light._position.x, light._position.y, light._position.z]));
 		// this.gl.uniform1f(this._programs.depth.u.uMaxDepth, light.shadowDistance || light.radius);
 		// this.gl.uniform3fv(this._programs.depth.u.uLightPosition, new Float32Array([light.position.x, light.position.y, light.position.z]));
+		this._renderShadowObjects();
+	}
+	drawCubeShadowMap (light) {
+		let cam = light.shadowCamera;
+		if (!cam) {
+			return false;
+		}
+
+		let lightProps = this._instancedProperties.get(light);
+
+		// depth rendering everything
+		if (!this._programs.depth.ready)
+			return false;
+		this._programs.depth.use();
+	}
+	_renderShadowObjects () {
 		this._objects.forEach((obj) => {
+			if (!obj.castsShadows) {
+				return;
+			}
 			this.gl.uniformMatrix4fv(this._programs.depth.u.uMVMatrix, false, obj.mvMatrix.asFloat32());
 			obj.meshes.forEach((mesh) => {
 				let meshProps = this._instancedProperties.get(mesh);
@@ -113,9 +133,10 @@ class Renderer3d extends Renderer {
 	renderObjectsToDepth () {}
 	cullLights () {}
 	forwardRenderObject (obj) {
+		let objMaterial = obj.material;
 		obj.meshes.forEach((mesh) => {
 			let meshProps = this._instancedProperties.get(mesh);
-			let material = mesh.getMaterial();
+			let material = objMaterial || mesh.getMaterial();
 			let materialProps = this._instancedProperties.get(material);
 			let program = materialProps.program;
 			let usedTextures = 0;
@@ -137,6 +158,7 @@ class Renderer3d extends Renderer {
 				return false;
 			program.use();
 
+			// temp limitation, should move to uid props
 			this._buffers.vertexPosition.bindToPosition(program.a.aPosition);
 			this._buffers.vertexNormals.bindToPosition(program.a.aNormal);
 
@@ -165,6 +187,7 @@ class Renderer3d extends Renderer {
 					numPoint = 0,
 					numSpot = 0,
 					shadowIndex = 0,
+					shadowCubeIndex = 0,
 					textureIndex = usedTextures;
 				for (let j = 0; j < inc; j++) {
 					let light = this._lights[j + i];
@@ -186,6 +209,25 @@ class Renderer3d extends Renderer {
 								light.direction.asFloat32());
 							this.gl.uniform1i(
 								program.getArrayPosition('uShadow2d', shadowIndex++),
+								textureIndex);
+							this.gl.uniform1i(
+								program.getStructPosition(uniformName, uniformIndex, 'shadowMapSize'),
+								props.shadowMap.size);
+							this.gl.activeTexture(this.gl['TEXTURE' + textureIndex]);
+							props.shadowMap.glTexture.bind();
+							if (light.shadowCamera)
+								this.gl.uniformMatrix4fv(
+									program.getStructPosition(uniformName, uniformIndex, 'projectionMatrix'),
+									false,
+									light.shadowCamera.projectionMatrix.asFloat32());
+							break;
+						}
+						case "point": {
+							uniformName = "uPointLights";
+							uniformIndex = numPoint;
+							numPoint++;
+							this.gl.uniform1i(
+								program.getArrayPosition('uShadowCubes', shadowCubeIndex++),
 								textureIndex);
 							this.gl.uniform1i(
 								program.getStructPosition(uniformName, uniformIndex, 'shadowMapSize'),
@@ -236,12 +278,6 @@ class Renderer3d extends Renderer {
 					this.gl.uniform1f(
 						program.getStructPosition(uniformName, uniformIndex, 'shadowDistance'),
 						light.shadowDistance || light.radius);
-
-					if (light.shadowCamera)
-						this.gl.uniformMatrix4fv(
-							program.getStructPosition(uniformName, uniformIndex, 'projectionMatrix'),
-							false,
-							light.shadowCamera.projectionMatrix.asFloat32());
 				}
 
 				this.gl.uniform1i(program.u.uNumDirectionalLights, numDirectional);
@@ -259,10 +295,11 @@ class Renderer3d extends Renderer {
 		this._buffers.elements.bind();
 		// draw shadowmaps
 		this.gl.disable(this.gl.BLEND);
-		this.gl.clearColor(1.0, 1.0, 1.0, 1.0);
 		this._lights.forEach((light) => {
 			if (light.type === 'directional' || light.type === 'spot')
 				this.draw2dShadowMap(light);
+			else if (light.type === 'point')
+				this.drawCubeShadowMap(light);
 		});
 		// cull lights
 		// for each opaque object, forward render it
@@ -388,6 +425,9 @@ class Renderer3d extends Renderer {
 				let instancedProps = this._instancedProperties.get(element);
 				if (element.type === 'directional') {
 					instancedProps.shadowMap = new GLFramebuffer(this.gl, { size: element.shadowResolution });
+				}
+				else if (element.type === 'point') {
+					instancedProps.shadowMap = new GLCubeFramebuffer(this.gl, { size: element.shadowResolution });
 				}
 			}
 		}

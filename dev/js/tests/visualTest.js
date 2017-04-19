@@ -12,8 +12,10 @@ module.exports = function () {
 	const Object3d = require('lib/gl/3d/Object3d');
 	const Material = require('lib/gl/3d/Material');
 	const DirectionalLight = require('lib/gl/3d/DirectionalLight');
+	const PointLight = require('lib/gl/3d/PointLight');
 	// const PerspectiveCamera = require('lib/gl/3d/PerspectiveCamera');
 	// const OrthographicCamera = require('lib/gl/3d/OrthographicCamera');
+	// const CubeCamera = require('lib/gl/3d/CubeCamera');
 	const Euler = require('lib/math/Euler');
 
 	ShaderSource.setPathPrepend("/glsl/");
@@ -27,9 +29,12 @@ module.exports = function () {
 
 	let cam = scene1.activeCamera;
 	cam.zFar = 1000;
-	cam.moveTo(1, 1, 10);
-	// cam.lookAt(0, 0, 0);
+	cam.moveTo(1, 2, 20);
+	cam.lookAt(0, 0, 0);
 	// cam.rotateTo(0, Math.PI, 0);
+
+	// let cubeCam = new CubeCamera().moveTo(0, 1, 2);
+	// scene1.activeCamera = cubeCam.cameras.zPositive;
 
 	// let boxPile = [];
 	// let materials = [
@@ -117,9 +122,60 @@ module.exports = function () {
 					specularity: .2
 				})
 			})
-		]
+		],
+		castsShadows: false
 	});
 	scene1.addElement(floor);
+
+	// direction indicators
+	let hBox = new Box({
+		width: .5,
+		height: .15,
+		depth: .15
+	});
+	let vBox = new Box({
+		width: .15,
+		height: .5,
+		depth: .15
+	});
+
+	let zMat = new Material({color: [0, 0, 1, 1]});
+	let yMat = new Material({color: [0, 1, 0, 1]});
+	let xMat = new Material({color:	[1, 0, 0, 1]});
+
+
+	let directionIndicators = {
+		zPositive: new Object3d({
+			meshes: [hBox, vBox],
+			material: zMat
+		}).moveTo(0, .5, 5).scaleTo(.5),
+		zNegative: new Object3d({
+			meshes: [hBox],
+			material: zMat
+		}).moveTo(0, .5, -5).scaleTo(.5),
+
+		xPositive: new Object3d({
+			meshes: [hBox, vBox],
+			material: xMat
+		}).moveTo(5, .5, 0).scaleTo(.5).rotateBy(0, Math.PI / 2, 0),
+		xNegative: new Object3d({
+			meshes: [hBox],
+			material: xMat
+		}).moveTo(-5, .5, 0).scaleTo(.5).rotateBy(0, Math.PI / 2, 0),
+
+		yPositive: new Object3d({
+			meshes: [hBox, vBox],
+			material: yMat
+		}).moveTo(0, 5, 0).scaleTo(.5).rotateBy(Math.PI / 2, 0, 0),
+		yNegative: new Object3d({
+			meshes: [hBox],
+			material: yMat
+		}).moveTo(0, -5, 0).scaleTo(.5).rotateBy(Math.PI / 2, 0, 0),
+	};
+
+	for (let dir in directionIndicators) {
+		scene1.addElement(directionIndicators[dir]);
+	}
 
 	let magicBox = new Object3d({
 		meshes: [
@@ -158,6 +214,13 @@ module.exports = function () {
 	scene1.addElement(sunLight);
 	// sunLight.shadowCamera.projectionMatrix;
 	// console.log(sunLight.shadowCamera, sunLight.shadowCamera._positionMatrix, sunLight.shadowCamera.mvMatrix, sunLight.shadowCamera._perspectiveMatrix, sunLight.shadowCamera._projectionMatrix);
+
+	let pointLight = new PointLight({
+		radius: 10,
+		attenuationStart: 4
+	});
+	pointLight.moveTo(1.5, 1, 0);
+	scene1.addElement(pointLight);
 
 	// scene1.activeCamera = sunLight.shadowCamera;
 	window.cam = scene1.activeCamera;
@@ -202,8 +265,8 @@ module.exports = function () {
 	let startTime = performance.now();
 	(function loop () {
 		let deltaTime = (performance.now() - startTime) / 1000;
-		cam.moveTo(Math.sin(deltaTime) * 8, 3, Math.cos(deltaTime) * 8);
-		cam.lookAt(0, 1, 0);
+		// cam.moveTo(Math.sin(deltaTime) * 8, 3, Math.cos(deltaTime) * 8);
+		// cam.lookAt(0, 1, 0);
 		// cam.rotateBy(0, Math.PI / 200, 0, 0);
 		sunLight.moveTo(Math.sin(deltaTime / 10) * -4, Math.cos(deltaTime / 10) * -4, .5);
 		sunLight.direction = [Math.sin(deltaTime / 10) * 4, Math.cos(deltaTime / 10) * 4, -2];

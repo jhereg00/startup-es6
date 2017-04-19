@@ -43,7 +43,11 @@ uniform float uSpecularity;
 float percentageLit (float testDepth, sampler2D shadowMap, vec2 sampleLocation, vec2 pixelSize, float minBlur, float maxBlur, float shadowDistance) {
 	// start by getting our moments
 	vec2 moments = vec2(0.0);
-	float texelSize = (testDepth - texture2D(shadowMap, sampleLocation).r) / shadowDistance * maxBlur;
+	float occluderDist = texture2D(shadowMap, sampleLocation).r;
+	if (occluderDist == 0.0) {
+		occluderDist = shadowDistance;
+	}
+	float texelSize = (testDepth - occluderDist) / shadowDistance * maxBlur;
 	texelSize = max(minBlur, texelSize);
 
 	// moments will be an average using a basic box blur
@@ -52,8 +56,8 @@ float percentageLit (float testDepth, sampler2D shadowMap, vec2 sampleLocation, 
 			// determine where to sample from for now based on blur size
 			vec2 offset = sampleLocation + vec2(float(x) * texelSize * pixelSize.x, float(y) * texelSize * pixelSize.y);
 			vec4 texSample = texture2D(shadowMap, offset);
-			moments.x += texSample.x;
-			moments.y += texSample.y;
+			moments.x += texSample.x == 0.0 ? shadowDistance : texSample.x;
+			moments.y += texSample.y == 0.0 ? shadowDistance * shadowDistance : texSample.y;
 		}
 	}
 	moments.x /= pow(float(SHADOW_BLUR_SAMPLES) * 2.0 + 1.0, 2.0);
@@ -99,10 +103,12 @@ void main () {
 			diffuseColor += shading * diffuseValue * uColor.rgb * (light.diffuse.rgb * light.diffuse.a * light.diffuseIntensity);
 
       // do blinn-phong specular highlights
-      vec3 halfDir = normalize(light.direction * -1.0 + viewDir);
-      float specAngle = max(dot(halfDir, vNormal), 0.0);
-      vec3 specOut = (light.specular.rgb * pow(specAngle, uSpecularExponent / 100.0 * 32.0)) * light.specular.a * light.specularIntensity;
-			specularColor += shading * specOut * uSpecularColor.rgb * uSpecularColor.a * uSpecularity;
+			if (diffuseValue > 0.0) {
+	      vec3 halfDir = normalize(light.direction * -1.0 + viewDir);
+	      float specAngle = max(dot(halfDir, vNormal), 0.0);
+	      vec3 specOut = (light.specular.rgb * pow(specAngle, uSpecularExponent / 100.0 * 32.0)) * light.specular.a * light.specularIntensity;
+				specularColor += shading * specOut * uSpecularColor.rgb * uSpecularColor.a * uSpecularity;
+			}
 		}
 	}
 

@@ -58,6 +58,7 @@ class Renderer {
 				throw 'Error creating WebGL context.';
 			}
 		}
+		this.gl.clearColor(1, 1, 1, 1);
 		// store some instanced properties
 		this._instancedProperties = new InstancedProperties();
 		// default up a pixel ratio

@@ -1,6 +1,8 @@
 /**
  * Object3d
  *
+ * Can set a material to this object to override appearance of its meshes.
+ *
  * @param {object} options
  *   @param {Mesh[]} meshes
  *   @param {string} name
@@ -12,7 +14,8 @@ const Positionable = require('lib/gl/3d/Positionable');
 
 const DEFAULTS = {
 	name: null,
-	meshes: []
+	meshes: [],
+	castsShadows: true
 };
 
 let objectsByName = {};
