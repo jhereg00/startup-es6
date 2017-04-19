@@ -18,6 +18,7 @@ class GLCubeFramebuffer extends GLFramebuffer {
 	}
 
 	bindDirection (direction) {
+		this.glTexture.bind();
 		let target = this._gl['TEXTURE_CUBE_MAP_' + direction];
 		this._gl.framebufferTexture2D(this._gl.FRAMEBUFFER, this._gl.COLOR_ATTACHMENT0, target, this.glTexture.texture, 0);
 	}

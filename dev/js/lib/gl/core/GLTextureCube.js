@@ -1,7 +1,7 @@
 /**
- * GLTexture2d
+ * GLTextureCube
  *
- * Controls a 2d Texture tied to a gl instance
+ * Controls a Cubemap Texture tied to a gl instance
  *
  * @param {WebGLRenderingContext} gl
  * @param src - null or any type allowed by texImage2D
@@ -21,7 +21,7 @@ const DEFAULTS = {
 	dataType: "UNSIGNED_BYTE"
 };
 
-class GLTexture2d {
+class GLTextureCube {
 	constructor (gl, src, options) {
 		if (!(gl instanceof WebGLRenderingContext)) {
 			throw new Error("GLProgram requires a valid WebGLRenderingContext as the first argument");
@@ -73,14 +73,11 @@ class GLTexture2d {
 		// }
 
 		if (!direction) {
-			this._gl.texImage2D(this._gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, this.settings.format, this.width, this.height, 0, this.settings.format, this.settings.dataType, null);
-			this._gl.texImage2D(this._gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 0, this.settings.format, this.width, this.height, 0, this.settings.format, this.settings.dataType, null);
-			this._gl.texImage2D(this._gl.TEXTURE_CUBE_MAP_POSITIVE_Y, 0, this.settings.format, this.width, this.height, 0, this.settings.format, this.settings.dataType, null);
-			this._gl.texImage2D(this._gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, this.settings.format, this.width, this.height, 0, this.settings.format, this.settings.dataType, null);
-			this._gl.texImage2D(this._gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, this.settings.format, this.width, this.height, 0, this.settings.format, this.settings.dataType, null);
-			this._gl.texImage2D(this._gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, this.settings.format, this.width, this.height, 0, this.settings.format, this.settings.dataType, null);
+			for (let i = 0; i < 6; i++) {
+				this._gl.texImage2D(this._gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, this.settings.format, this.settings.width, this.settings.height, 0, this.settings.format, this.settings.dataType, null);
+			}
 		}
 	}
 }
 
-module.exports = GLTexture2d;
+module.exports = GLTextureCube;

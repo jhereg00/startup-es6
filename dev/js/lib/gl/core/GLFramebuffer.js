@@ -10,8 +10,7 @@ const extendObject = require('lib/helpers/extendObject');
 const GLTexture2d = require('lib/gl/core/GLTexture2d');
 
 const DEFAULTS = {
-	size: 1024,
-	renderbuffer: false
+	size: 1024
 };
 
 class GLFramebuffer {
@@ -47,6 +46,7 @@ class GLFramebuffer {
 			this._gl.bindRenderbuffer(this._gl.RENDERBUFFER, this.renderbuffer);
 		}
 		this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, this.framebuffer);
+		// this._gl.framebufferRenderbuffer(this._gl.FRAMEBUFFER, this._gl.DEPTH_ATTACHMENT, this._gl.RENDERBUFFER, this.renderbuffer);
 		this._gl.viewport(0, 0, this.size, this.size);
 	}
 }

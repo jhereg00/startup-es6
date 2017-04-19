@@ -48,7 +48,7 @@ let extendPositionableMethod = function (methodName) {
 	return function () {
 		Positionable.prototype[methodName].apply(this, arguments);
 		if (this.shadowCamera) {
-			Positionable.prototype[methodName].apply(this.shadowCamera, arguments);
+			this.shadowCamera[methodName].apply(this.shadowCamera, arguments);
 		}
 	};
 };

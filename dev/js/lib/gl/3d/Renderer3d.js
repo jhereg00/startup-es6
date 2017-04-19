@@ -101,8 +101,6 @@ class Renderer3d extends Renderer {
 		this._buffers.vertexPosition.bindToPosition(this._programs.depth.a.aPosition);
 		this.gl.uniformMatrix4fv(this._programs.depth.u.uProjectionMatrix, false, light.shadowCamera.projectionMatrix.asFloat32());
 		this.gl.uniform3fv(this._programs.depth.u.uCameraPosition, new Float32Array([light._position.x, light._position.y, light._position.z]));
-		// this.gl.uniform1f(this._programs.depth.u.uMaxDepth, light.shadowDistance || light.radius);
-		// this.gl.uniform3fv(this._programs.depth.u.uLightPosition, new Float32Array([light.position.x, light.position.y, light.position.z]));
 		this._renderShadowObjects();
 	}
 	drawCubeShadowMap (light) {
@@ -117,6 +115,17 @@ class Renderer3d extends Renderer {
 		if (!this._programs.depth.ready)
 			return false;
 		this._programs.depth.use();
+		lightProps.shadowMap.use();
+		this._buffers.vertexPosition.bindToPosition(this._programs.depth.a.aPosition);
+
+		this.gl.uniform3fv(this._programs.depth.u.uCameraPosition, new Float32Array([light._position.x, light._position.y, light._position.z]));
+		for (let dir in light.shadowCamera.cameras) {
+			lightProps.shadowMap.bindDirection(dir);
+			this.clear(true, true, false);
+			// console.log(dir, this.gl.getFramebufferAttachmentParameter(this.gl.FRAMEBUFFER, this.gl.COLOR_ATTACHMENT0, this.gl.FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE));
+			this.gl.uniformMatrix4fv(this._programs.depth.u.uProjectionMatrix, false, light.shadowCamera.cameras[dir].projectionMatrix.asFloat32());
+			this._renderShadowObjects();
+		}
 	}
 	_renderShadowObjects () {
 		this._objects.forEach((obj) => {
@@ -148,7 +157,7 @@ class Renderer3d extends Renderer {
 					fragmentShader: "forward.fs.glsl",
 					definitions: {
 						USE_NORMALS: '',
-						MAX_LIGHTS: this._maxTextures - usedTextures
+						MAX_LIGHTS: Math.floor((this._maxTextures - usedTextures) / 3)
 					}
 				});
 				materialProps.program = program;
@@ -234,6 +243,13 @@ class Renderer3d extends Renderer {
 								props.shadowMap.size);
 							this.gl.activeTexture(this.gl['TEXTURE' + textureIndex]);
 							props.shadowMap.glTexture.bind();
+
+							this.gl.uniform1f(
+								program.getStructPosition(uniformName, uniformIndex, 'radius'),
+								light.radius);
+							this.gl.uniform1f(
+								program.getStructPosition(uniformName, uniformIndex, 'attenuationStart'),
+								light.attenuationStart);
 							break;
 						}
 					}
@@ -278,9 +294,12 @@ class Renderer3d extends Renderer {
 					this.gl.uniform1f(
 						program.getStructPosition(uniformName, uniformIndex, 'shadowDistance'),
 						light.shadowDistance || light.radius);
+
+					textureIndex++;
 				}
 
 				this.gl.uniform1i(program.u.uNumDirectionalLights, numDirectional);
+				this.gl.uniform1i(program.u.uNumPointLights, numPoint);
 
 				// offset is *2 to handle the UNSIGNED_SHORT
 				this.gl.drawElements(this.gl.TRIANGLES, meshProps.count, this.gl.UNSIGNED_SHORT, meshProps.start * 2);

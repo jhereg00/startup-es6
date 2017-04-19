@@ -8,7 +8,9 @@ const CubeCamera = require('lib/gl/3d/CubeCamera');
 const extendObject = require('lib/helpers/extendObject');
 
 const DEFAULTS = {
-	shadowDistance: 10
+	shadowDistance: 10,
+	radius: 10,
+	attenuationStart: 5
 };
 
 class PointLight extends Light {

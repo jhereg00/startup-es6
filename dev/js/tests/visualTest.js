@@ -198,8 +198,8 @@ module.exports = function () {
 
 	let sunLight = new DirectionalLight({
 		direction: [.2, 0, -1],
-		ambient: [.4, .4, .46],
-		diffuse: [.6, .6, .54],
+		ambient: [.1, .1, .16],
+		diffuse: [.6, .55, .3],
 		specular: [1, .8, .4, 1],
 		shadowDistance: 20,
 		bias: .1,
@@ -217,9 +217,10 @@ module.exports = function () {
 
 	let pointLight = new PointLight({
 		radius: 10,
-		attenuationStart: 4
+		attenuationStart: 4,
+		diffuse: [1, 1, 1, 1]
 	});
-	pointLight.moveTo(1.5, 1, 0);
+	pointLight.moveTo(1.5, 3, 0);
 	scene1.addElement(pointLight);
 
 	// scene1.activeCamera = sunLight.shadowCamera;
