@@ -9,8 +9,10 @@
  *
  * @method onReady
  * @method use
+ * @method updateDefinitions
  */
 const ShaderSource = require('lib/gl/core/ShaderSource');
+const extendObject = require('lib/helpers/extendObject');
 
 class GLProgram {
 	constructor (gl, options) {
@@ -24,7 +26,7 @@ class GLProgram {
 			fragment: ShaderSource.get(options.fragmentShader, gl.FRAGMENT_SHADER)
 		};
 		this._shaders = {};
-		this._definitions = options.definitions;
+		this._definitions = options.definitions || {};
 		this._attributeNames = [];
 		this._uniformNames = [];
 
@@ -111,6 +113,12 @@ class GLProgram {
 	getArrayPosition (rootName, index) {
 		return this._gl.getUniformLocation(this.program, rootName + '[' + index + ']');
 	}
+
+	// updateDefinitions (defs) {
+	// 	extendObject(this._definitions, defs);
+	// 	this._shaderSources.vertex.updateDefinitions(this._definitions);
+	// 	this._shaderSources.fragment.updateDefinitions(this._definitions);
+	// }
 
 	// alias for attributes and uniforms
 	get a() {

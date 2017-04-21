@@ -118,8 +118,9 @@ module.exports = function () {
 				width: 40,
 				depth: 40,
 				material: new Material({
+					name: 'floor',
 					color: [.4, .4, .4, 1],
-					specularity: .2
+					specularity: 0
 				})
 			})
 		],
@@ -190,11 +191,45 @@ module.exports = function () {
 				})
 			})
 		]
-	}).moveTo(0, 1, 0)
+	}).moveTo(0, 3, 0)
 		.setRotationFromEuler(new Euler(Math.PI / 5, 0, Math.PI / 4, "YZX"));
 	window.magicBox = magicBox;
 
 	scene1.addElement(magicBox);
+
+	let walls = [
+		new Object3d({
+			meshes: [
+				new Plane({
+					width: 10,
+					depth: 10,
+					material: 'floor'
+				})
+			]
+		}).setRotationFromEuler(new Euler(0, 0, -Math.PI / 2)).moveTo(-3, 5, 0),
+		new Object3d({
+			meshes: [
+				new Plane({
+					width: 10,
+					depth: 10,
+					material: 'floor'
+				})
+			]
+		}).setRotationFromEuler(new Euler(0, 0, Math.PI / 2)).moveTo(3, 5, 0),
+		new Object3d({
+			meshes: [
+				new Plane({
+					width: 10,
+					depth: 10,
+					material: 'floor'
+				})
+			]
+		}).setRotationFromEuler(new Euler(Math.PI / 2, 0, 0)).moveTo(0, 5, -3)
+	];
+	walls.forEach((wall) => {
+		scene1.addElement(wall);
+	});
+
 
 	let sunLight = new DirectionalLight({
 		direction: [.2, 0, -1],
@@ -218,10 +253,31 @@ module.exports = function () {
 	let pointLight = new PointLight({
 		radius: 10,
 		attenuationStart: 4,
-		diffuse: [1, 1, 1, 1]
+		diffuse: [.6, .6, .6, 1]
 	});
-	pointLight.moveTo(1.5, 3, 0);
+	pointLight.moveTo(2, 2, 0);
 	scene1.addElement(pointLight);
+
+	var pointLight2 = new PointLight({
+		radius: 20,
+		attenuationStart: 0,
+		diffuse: [0, 0, .8, 1]
+	});
+	pointLight2.moveTo(-2, 2.5, 0);
+	scene1.addElement(pointLight2);
+
+	var pointLight3 = new PointLight({
+		radius: 15,
+		attenuationStart: 1,
+		diffuse: [0, 1, 0, 1],
+		diffuseIntensity: 1,
+		specular: [.3, 1, .3, 1],
+		specularIntensity: 5
+	});
+	pointLight3.moveTo(0, .0, 2);
+	setTimeout(() => {
+		scene1.addElement(pointLight3);
+	}, 4000);
 
 	// scene1.activeCamera = sunLight.shadowCamera;
 	window.cam = scene1.activeCamera;
@@ -266,14 +322,17 @@ module.exports = function () {
 	let startTime = performance.now();
 	(function loop () {
 		let deltaTime = (performance.now() - startTime) / 1000;
-		// cam.moveTo(Math.sin(deltaTime) * 8, 3, Math.cos(deltaTime) * 8);
-		// cam.lookAt(0, 1, 0);
+		cam.moveTo(Math.sin(deltaTime) * 15, 3, Math.cos(deltaTime) * 15);
+		cam.lookAt(0, 2, 0);
 		// cam.rotateBy(0, Math.PI / 200, 0, 0);
 		sunLight.moveTo(Math.sin(deltaTime / 10) * -4, Math.cos(deltaTime / 10) * -4, .5);
 		sunLight.direction = [Math.sin(deltaTime / 10) * 4, Math.cos(deltaTime / 10) * 4, -2];
 		// sunLight.moveTo(0, Math.sin(deltaTime / 5), Math.cos(deltaTime / 10) * 4 + 4);
 		// cam.rotateBy(0, Math.PI / 60, 0);
 		magicBox.rotateBy(0, Math.PI / 100, 0);
+
+		pointLight.moveTo(-2, Math.sin(deltaTime / 3) * 3 + 3, 2);
+
 		scene1.render();
 
 		if (performance.now() > loopStartTime) {

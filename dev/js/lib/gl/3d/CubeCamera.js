@@ -19,12 +19,12 @@ class CubeCamera {
 			aspectRatio: 1
 		};
 		this.cameras = {
-			POSITIVE_X: new PerspectiveCamera(camSettings).rotateTo(0, -Math.PI / 2, 0),
-			NEGATIVE_X: new PerspectiveCamera(camSettings).rotateTo(0, Math.PI / 2, 0),
+			POSITIVE_X: new PerspectiveCamera(camSettings).rotateTo(0, -Math.PI / 2, Math.PI),
+			NEGATIVE_X: new PerspectiveCamera(camSettings).rotateTo(0, Math.PI / 2, Math.PI),
 			POSITIVE_Y: new PerspectiveCamera(camSettings).rotateTo(Math.PI / 2, 0, 0),
 			NEGATIVE_Y: new PerspectiveCamera(camSettings).rotateTo(-Math.PI / 2, 0, 0),
-			POSITIVE_Z: new PerspectiveCamera(camSettings).rotateTo(0, Math.PI, 0),
-			NEGATIVE_Z: new PerspectiveCamera(camSettings)
+			POSITIVE_Z: new PerspectiveCamera(camSettings).rotateTo(0, Math.PI, Math.PI),
+			NEGATIVE_Z: new PerspectiveCamera(camSettings).rotateTo(0, 0, Math.PI)
 		};
 
 		// not needed here, but prevents an error

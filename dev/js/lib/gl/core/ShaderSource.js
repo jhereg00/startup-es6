@@ -90,6 +90,21 @@ class ShaderSource {
 		});
 	}
 
+	// updateDefinitions (defs) {
+	// 	var definitionsString = '';
+	// 	for (let def in defs) {
+	// 		if (new RegExp('\b' + def + '\b').test(this.source)) {
+	// 			this.source.replace(new RegExp('\b' + def + '\s+.*\n'), def + ' ' + defs[def]);
+	// 		}
+	// 		else {
+	// 			definitionsString += "#define " + def + " " + defs[def] + "\n";
+	// 		}
+	// 	}
+	// 	if (definitionsString) {
+	// 		this.source = definitionsString + this.source;
+	// 	}
+	// }
+
 	onLoad (fn) {
 		return this._ajaxRequest.then(fn);
 	}

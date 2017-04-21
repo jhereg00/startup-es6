@@ -141,7 +141,72 @@ class Renderer3d extends Renderer {
 	}
 	renderObjectsToDepth () {}
 	cullLights () {}
-	forwardRenderObject (obj) {
+
+	_bindCommonLightAttributes (program, light, uniformName, uniformIndex) {
+		this.gl.uniform3fv(
+			program.getStructPosition(uniformName, uniformIndex, 'position'),
+			new Float32Array([light._position.x, light._position.y, light._position.z]));
+
+		this.gl.uniform1f(
+			program.getStructPosition(uniformName, uniformIndex, 'bias'),
+			light.bias);
+
+		this.gl.uniform4fv(
+			program.getStructPosition(uniformName, uniformIndex, 'ambient'),
+			new Float32Array(light.ambient));
+		this.gl.uniform1f(
+			program.getStructPosition(uniformName, uniformIndex, 'ambientIntensity'),
+			light.ambientIntensity);
+
+		this.gl.uniform4fv(
+			program.getStructPosition(uniformName, uniformIndex, 'diffuse'),
+			new Float32Array(light.diffuse));
+		this.gl.uniform1f(
+			program.getStructPosition(uniformName, uniformIndex, 'diffuseIntensity'),
+			light.diffuseIntensity);
+
+		this.gl.uniform4fv(
+			program.getStructPosition(uniformName, uniformIndex, 'specular'),
+			new Float32Array(light.specular));
+		this.gl.uniform1f(
+			program.getStructPosition(uniformName, uniformIndex, 'specularIntensity'),
+			light.specularIntensity);
+
+		this.gl.uniform1f(
+			program.getStructPosition(uniformName, uniformIndex, 'minShadowBlur'),
+			light.minShadowBlur);
+		this.gl.uniform1f(
+			program.getStructPosition(uniformName, uniformIndex, 'maxShadowBlur'),
+			light.maxShadowBlur);
+
+		this.gl.uniform1f(
+			program.getStructPosition(uniformName, uniformIndex, 'shadowDistance'),
+			light.shadowDistance || light.radius);
+	}
+	_bindPointLight (program, lightIndex, textureIndex) {
+		let light = this._lights.point[lightIndex];
+		let uniformName = "uPointLights";
+		let props = this._instancedProperties.get(light);
+		this.gl.uniform1i(
+			program.getArrayPosition('uPointShadows', lightIndex),
+			textureIndex);
+		this.gl.uniform1i(
+			program.getStructPosition(uniformName, lightIndex, 'shadowMapSize'),
+			props.shadowMap.size);
+		this.gl.activeTexture(this.gl['TEXTURE' + textureIndex]);
+		props.shadowMap.glTexture.bind();
+
+		this.gl.uniform1f(
+			program.getStructPosition(uniformName, lightIndex, 'radius'),
+			light.radius);
+		this.gl.uniform1f(
+			program.getStructPosition(uniformName, lightIndex, 'attenuationStart'),
+			light.attenuationStart);
+
+		this._bindCommonLightAttributes(program, light, uniformName, lightIndex);
+	}
+
+	forwardRenderObject (obj, forceNewProgram) {
 		let objMaterial = obj.material;
 		obj.meshes.forEach((mesh) => {
 			let meshProps = this._instancedProperties.get(mesh);
@@ -149,25 +214,37 @@ class Renderer3d extends Renderer {
 			let materialProps = this._instancedProperties.get(material);
 			let program = materialProps.program;
 			let usedTextures = 0;
-			if (!materialProps.program) {
+
+			if ((!materialProps.program || forceNewProgram) && !materialProps.isBuilding) {
 				// add usedTextures for materials with textures
 				// TODO: make material specific
-				program = new GLProgram(this.gl, {
+				var newProgram = new GLProgram(this.gl, {
 					vertexShader: "forward.vs.glsl",
 					fragmentShader: "forward.fs.glsl",
 					definitions: {
 						USE_NORMALS: '',
-						MAX_LIGHTS: Math.floor((this._maxTextures - usedTextures) / 3)
+						NUM_DIRECTIONAL_LIGHTS: this._lights.directional && this._lights.directional.length,
+						NUM_POINT_LIGHTS: this._lights.point && this._lights.point.length
 					}
 				});
-				materialProps.program = program;
+				console.log(this._lights.point && this._lights.point.length);
+				materialProps.isBuilding = true;
+
+				newProgram.onReady(() => {
+					// temp limitation, should move to uid props
+					this._buffers.elements.bind();
+					this._buffers.vertexPosition.bindToPosition(newProgram.a.aPosition);
+					this._buffers.vertexNormals.bindToPosition(newProgram.a.aNormal);
+					materialProps.program = newProgram;
+					materialProps.isBuilding = false;
+				});
 			}
 
-			if (!program.ready)
+			if (!program || !program.use())
 				return false;
-			program.use();
 
-			// temp limitation, should move to uid props
+			// console.log('vec4(vec3(' + brightness + '), 1.0)');
+
 			this._buffers.vertexPosition.bindToPosition(program.a.aPosition);
 			this._buffers.vertexNormals.bindToPosition(program.a.aNormal);
 
@@ -185,125 +262,137 @@ class Renderer3d extends Renderer {
 			this.gl.uniform1f(program.u.uSpecularExponent, material.specularExponent);
 			this.gl.uniform1f(program.u.uSpecularity, material.specularity);
 
-			// bind as many lights as we can, then do a pass.  Keep going if needed
-			let inc = this._maxTextures - usedTextures;
-			for (let i = 0, len = this._lights.length; i < len; i += inc) {
-				// make this add to last pass if not the first
-				this.gl.blendFunc(this.gl.ONE, i === 0 ? this.gl.ZERO : this.gl.ONE);
-
-				let
-					numDirectional = 0,
-					numPoint = 0,
-					numSpot = 0,
-					shadowIndex = 0,
-					shadowCubeIndex = 0,
-					textureIndex = usedTextures;
-				for (let j = 0; j < inc; j++) {
-					let light = this._lights[j + i];
-					if (!light) {
-						break;
-					}
-
-					// figure out what to bind to
-					let uniformName, uniformIndex;
-					let props = this._instancedProperties.get(light);
-
-					switch (light.type) {
-						case "directional": {
-							uniformName = "uDirectionalLights";
-							uniformIndex = numDirectional;
-							numDirectional++;
-							this.gl.uniform3fv(
-								program.getStructPosition(uniformName, uniformIndex, 'direction'),
-								light.direction.asFloat32());
-							this.gl.uniform1i(
-								program.getArrayPosition('uShadow2d', shadowIndex++),
-								textureIndex);
-							this.gl.uniform1i(
-								program.getStructPosition(uniformName, uniformIndex, 'shadowMapSize'),
-								props.shadowMap.size);
-							this.gl.activeTexture(this.gl['TEXTURE' + textureIndex]);
-							props.shadowMap.glTexture.bind();
-							if (light.shadowCamera)
-								this.gl.uniformMatrix4fv(
-									program.getStructPosition(uniformName, uniformIndex, 'projectionMatrix'),
-									false,
-									light.shadowCamera.projectionMatrix.asFloat32());
-							break;
-						}
-						case "point": {
-							uniformName = "uPointLights";
-							uniformIndex = numPoint;
-							numPoint++;
-							this.gl.uniform1i(
-								program.getArrayPosition('uShadowCubes', shadowCubeIndex++),
-								textureIndex);
-							this.gl.uniform1i(
-								program.getStructPosition(uniformName, uniformIndex, 'shadowMapSize'),
-								props.shadowMap.size);
-							this.gl.activeTexture(this.gl['TEXTURE' + textureIndex]);
-							props.shadowMap.glTexture.bind();
-
-							this.gl.uniform1f(
-								program.getStructPosition(uniformName, uniformIndex, 'radius'),
-								light.radius);
-							this.gl.uniform1f(
-								program.getStructPosition(uniformName, uniformIndex, 'attenuationStart'),
-								light.attenuationStart);
-							break;
-						}
-					}
-
-					// bind common attributes
-					this.gl.uniform3fv(
-						program.getStructPosition(uniformName, uniformIndex, 'position'),
-						new Float32Array([light._position.x, light._position.y, light._position.z]));
-
-					this.gl.uniform1f(
-						program.getStructPosition(uniformName, uniformIndex, 'bias'),
-						light.bias);
-
-					this.gl.uniform4fv(
-						program.getStructPosition(uniformName, uniformIndex, 'ambient'),
-						new Float32Array(light.ambient));
-					this.gl.uniform1f(
-						program.getStructPosition(uniformName, uniformIndex, 'ambientIntensity'),
-						light.ambientIntensity);
-
-					this.gl.uniform4fv(
-						program.getStructPosition(uniformName, uniformIndex, 'diffuse'),
-						new Float32Array(light.diffuse));
-					this.gl.uniform1f(
-						program.getStructPosition(uniformName, uniformIndex, 'diffuseIntensity'),
-						light.diffuseIntensity);
-
-					this.gl.uniform4fv(
-						program.getStructPosition(uniformName, uniformIndex, 'specular'),
-						new Float32Array(light.specular));
-					this.gl.uniform1f(
-						program.getStructPosition(uniformName, uniformIndex, 'specularIntensity'),
-						light.specularIntensity);
-
-					this.gl.uniform1f(
-						program.getStructPosition(uniformName, uniformIndex, 'minShadowBlur'),
-						light.minShadowBlur);
-					this.gl.uniform1f(
-						program.getStructPosition(uniformName, uniformIndex, 'maxShadowBlur'),
-						light.maxShadowBlur);
-
-					this.gl.uniform1f(
-						program.getStructPosition(uniformName, uniformIndex, 'shadowDistance'),
-						light.shadowDistance || light.radius);
-
+			// bind point lights
+			let maxLights = this._maxTextures - usedTextures;
+			let textureIndex = usedTextures;
+			if (this._lights.point) {
+				for (let i = 0, len = this._lights.point.length; i < len && i < maxLights; i++) {
+					this._bindPointLight(program, i, textureIndex);
+					usedTextures++;
 					textureIndex++;
 				}
-
-				this.gl.uniform1i(program.u.uNumDirectionalLights, numDirectional);
-				this.gl.uniform1i(program.u.uNumPointLights, numPoint);
+			}
+			this.gl.blendFunc(this.gl.ONE, this.gl.ZERO);
+			//
+			// // bind as many lights as we can, then do a pass.  Keep going if needed
+			// let inc = this._maxTextures - usedTextures;
+			// for (let i = 0, len = this._lights.point.length; i < len; i += inc) {
+			// 	// make this add to last pass if not the first
+			// 	this.gl.blendFunc(this.gl.ONE, i === 0 ? this.gl.ZERO : this.gl.ONE);
+			//
+			// 	let
+			// 		numDirectional = 0,
+			// 		numPoint = 0,
+			// 		numSpot = 0,
+			// 		shadowIndex = 0,
+			// 		shadowCubeIndex = 0,
+			// 		textureIndex = usedTextures;
+			// 	for (let j = 0; j < inc; j++) {
+			// 		let light = this._lights[j + i];
+			// 		if (!light) {
+			// 			break;
+			// 		}
+			//
+			// 		// figure out what to bind to
+			// 		let uniformName, uniformIndex;
+			// 		let props = this._instancedProperties.get(light);
+			//
+			// 		switch (light.type) {
+			// 			case "directional": {
+			// 				uniformName = "uDirectionalLights";
+			// 				uniformIndex = numDirectional;
+			// 				numDirectional++;
+			// 				this.gl.uniform3fv(
+			// 					program.getStructPosition(uniformName, uniformIndex, 'direction'),
+			// 					light.direction.asFloat32());
+			// 				this.gl.uniform1i(
+			// 					program.getArrayPosition('uShadow2d', shadowIndex++),
+			// 					textureIndex);
+			// 				this.gl.uniform1i(
+			// 					program.getStructPosition(uniformName, uniformIndex, 'shadowMapSize'),
+			// 					props.shadowMap.size);
+			// 				this.gl.activeTexture(this.gl['TEXTURE' + textureIndex]);
+			// 				props.shadowMap.glTexture.bind();
+			// 				if (light.shadowCamera)
+			// 					this.gl.uniformMatrix4fv(
+			// 						program.getStructPosition(uniformName, uniformIndex, 'projectionMatrix'),
+			// 						false,
+			// 						light.shadowCamera.projectionMatrix.asFloat32());
+			// 				break;
+			// 			}
+			// 			case "point": {
+			// 				uniformName = "uPointLights";
+			// 				uniformIndex = numPoint;
+			// 				numPoint++;
+			// 				this.gl.uniform1i(
+			// 					program.getArrayPosition('uShadowCubes', shadowCubeIndex++),
+			// 					textureIndex);
+			// 				this.gl.uniform1i(
+			// 					program.getStructPosition(uniformName, uniformIndex, 'shadowMapSize'),
+			// 					props.shadowMap.size);
+			// 				this.gl.activeTexture(this.gl['TEXTURE' + textureIndex]);
+			// 				props.shadowMap.glTexture.bind();
+			//
+			// 				this.gl.uniform1f(
+			// 					program.getStructPosition(uniformName, uniformIndex, 'radius'),
+			// 					light.radius);
+			// 				this.gl.uniform1f(
+			// 					program.getStructPosition(uniformName, uniformIndex, 'attenuationStart'),
+			// 					light.attenuationStart);
+			// 				break;
+			// 			}
+			// 		}
+			//
+			// 		// bind common attributes
+			// 		this.gl.uniform3fv(
+			// 			program.getStructPosition(uniformName, uniformIndex, 'position'),
+			// 			new Float32Array([light._position.x, light._position.y, light._position.z]));
+			//
+			// 		this.gl.uniform1f(
+			// 			program.getStructPosition(uniformName, uniformIndex, 'bias'),
+			// 			light.bias);
+			//
+			// 		this.gl.uniform4fv(
+			// 			program.getStructPosition(uniformName, uniformIndex, 'ambient'),
+			// 			new Float32Array(light.ambient));
+			// 		this.gl.uniform1f(
+			// 			program.getStructPosition(uniformName, uniformIndex, 'ambientIntensity'),
+			// 			light.ambientIntensity);
+			//
+			// 		this.gl.uniform4fv(
+			// 			program.getStructPosition(uniformName, uniformIndex, 'diffuse'),
+			// 			new Float32Array(light.diffuse));
+			// 		this.gl.uniform1f(
+			// 			program.getStructPosition(uniformName, uniformIndex, 'diffuseIntensity'),
+			// 			light.diffuseIntensity);
+			//
+			// 		this.gl.uniform4fv(
+			// 			program.getStructPosition(uniformName, uniformIndex, 'specular'),
+			// 			new Float32Array(light.specular));
+			// 		this.gl.uniform1f(
+			// 			program.getStructPosition(uniformName, uniformIndex, 'specularIntensity'),
+			// 			light.specularIntensity);
+			//
+			// 		this.gl.uniform1f(
+			// 			program.getStructPosition(uniformName, uniformIndex, 'minShadowBlur'),
+			// 			light.minShadowBlur);
+			// 		this.gl.uniform1f(
+			// 			program.getStructPosition(uniformName, uniformIndex, 'maxShadowBlur'),
+			// 			light.maxShadowBlur);
+			//
+			// 		this.gl.uniform1f(
+			// 			program.getStructPosition(uniformName, uniformIndex, 'shadowDistance'),
+			// 			light.shadowDistance || light.radius);
+			//
+			// 		textureIndex++;
+			// 	}
+			//
+			// 	this.gl.uniform1i(program.u.uNumDirectionalLights, numDirectional);
+			// 	this.gl.uniform1i(program.u.uNumPointLights, numPoint);
 
 				// offset is *2 to handle the UNSIGNED_SHORT
 				this.gl.drawElements(this.gl.TRIANGLES, meshProps.count, this.gl.UNSIGNED_SHORT, meshProps.start * 2);
-			}
+			// }
 		});
 	}
 	postProcess () {}
@@ -314,12 +403,16 @@ class Renderer3d extends Renderer {
 		this._buffers.elements.bind();
 		// draw shadowmaps
 		this.gl.disable(this.gl.BLEND);
-		this._lights.forEach((light) => {
-			if (light.type === 'directional' || light.type === 'spot')
-				this.draw2dShadowMap(light);
-			else if (light.type === 'point')
-				this.drawCubeShadowMap(light);
-		});
+		for (let type in this._lights) {
+			if (this._lights[type] && this._lights[type].length) {
+				this._lights[type].forEach((light) => {
+					if (type === 'directional' || type === 'spot')
+						this.draw2dShadowMap(light);
+					else if (type === 'point')
+						this.drawCubeShadowMap(light);
+				});
+			}
+		}
 		// cull lights
 		// for each opaque object, forward render it
 		this.gl.enable(this.gl.BLEND);
@@ -327,7 +420,7 @@ class Renderer3d extends Renderer {
 		this.resetViewport();
 		this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
 		this.clear();
-		this._objects.forEach((obj) => this.forwardRenderObject(obj));
+		this._objects.forEach((obj) => this.forwardRenderObject(obj, this._lights.needsUpdate));
 		// for each transparent object, forward render it
 
 		// debug visual aids
@@ -338,6 +431,9 @@ class Renderer3d extends Renderer {
 		// postprocessing
 
 		// put it on the canvas
+
+		// reset update trackers
+		this._lights.needsUpdate = false;
 	}
 
 	// visual aids
@@ -437,8 +533,11 @@ class Renderer3d extends Renderer {
 				console.warn("attempt made to add Light without a defined type. Ignoring.");
 				return;
 			}
-			if (this._lights.indexOf(element) === -1) {
-				this._lights.push(element);
+			if (!this._lights[type]) {
+				this._lights[type] = [];
+			}
+			if (this._lights[type].indexOf(element) === -1) {
+				this._lights[type].push(element);
 
 				// build shadowmap buffers
 				let instancedProps = this._instancedProperties.get(element);
@@ -449,6 +548,7 @@ class Renderer3d extends Renderer {
 					instancedProps.shadowMap = new GLCubeFramebuffer(this.gl, { size: element.shadowResolution });
 				}
 			}
+			this._lights.needsUpdate = true;
 		}
 	}
 
