@@ -253,7 +253,8 @@ module.exports = function () {
 	let pointLight = new PointLight({
 		radius: 10,
 		attenuationStart: 4,
-		diffuse: [.6, .6, .6, 1]
+		diffuse: [.6, .6, .6, 1],
+		maxShadowBlur: 16
 	});
 	pointLight.moveTo(2, 2, 0);
 	scene1.addElement(pointLight);
@@ -267,12 +268,13 @@ module.exports = function () {
 	scene1.addElement(pointLight2);
 
 	var pointLight3 = new PointLight({
-		radius: 15,
+		radius: 5,
 		attenuationStart: 1,
 		diffuse: [0, 1, 0, 1],
 		diffuseIntensity: 1,
 		specular: [.3, 1, .3, 1],
-		specularIntensity: 5
+		specularIntensity: 5,
+		maxShadowBlur: 2
 	});
 	pointLight3.moveTo(0, .0, 2);
 	setTimeout(() => {
