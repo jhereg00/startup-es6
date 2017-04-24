@@ -239,10 +239,12 @@ module.exports = function () {
 				height: 4,
 				depth: 4,
 				material: new Material({
-					color: [.8, 0, 0, .5],
-					specularity: 1
+					color: [1, 1, 1, .05],
+					specularColor: [1, 1, .75, 1],
+					specularity: 1,
+					specularExponent: 256
 				}),
-				invertNormals: true
+				// invertNormals: true
 			})
 		],
 		castsShadows: false
@@ -283,7 +285,7 @@ module.exports = function () {
 		attenuationStart: 0,
 		diffuse: [0, 0, .8, 1]
 	});
-	pointLight2.moveTo(-2, 2.5, 0);
+	pointLight2.moveTo(-4, 2.5, 0);
 	scene1.addElement(pointLight2);
 
 	var pointLight3 = new PointLight({
@@ -295,7 +297,7 @@ module.exports = function () {
 		specularIntensity: 5,
 		maxShadowBlur: 2
 	});
-	pointLight3.moveTo(0, .0, 2);
+	pointLight3.moveTo(0, 2, 3);
 	setTimeout(() => {
 		scene1.addElement(pointLight3);
 	}, 4000);
@@ -352,7 +354,7 @@ module.exports = function () {
 		// cam.rotateBy(0, Math.PI / 60, 0);
 		magicBox.rotateBy(0, Math.PI / 100, 0);
 
-		pointLight.moveTo(-2, Math.sin(deltaTime / 3) * 3 + 3, 2);
+		// pointLight.moveTo(-2, Math.sin(deltaTime / 3) * 3 + 3, 2);
 
 		scene1.render();
 

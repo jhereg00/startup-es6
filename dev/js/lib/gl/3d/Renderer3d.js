@@ -252,8 +252,8 @@ class Renderer3d extends Renderer {
 					fragmentShader: "forward.fs.glsl",
 					definitions: {
 						USE_NORMALS: '',
-						NUM_DIRECTIONAL_LIGHTS: this._lights.directional && this._lights.directional.length,
-						NUM_POINT_LIGHTS: this._lights.point && this._lights.point.length
+						NUM_DIRECTIONAL_LIGHTS: this._lights.directional && this._lights.directional.length || 0,
+						NUM_POINT_LIGHTS: this._lights.point && this._lights.point.length || 0
 					}
 				});
 				console.log(this._lights.point && this._lights.point.length);

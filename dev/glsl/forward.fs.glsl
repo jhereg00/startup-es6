@@ -162,6 +162,8 @@ void main () {
 	float specAngle;
 	vec3 specOut;
 	vec3 direction;
+	float specularity;
+	float totalSpecularity = 0.0;
 
 	#if NUM_DIRECTIONAL_LIGHTS > 0
 		for (int i = 0; i < NUM_DIRECTIONAL_LIGHTS; i++) {
@@ -187,8 +189,11 @@ void main () {
 			if (diffuseValue > 0.0) {
 	      halfDir = normalize(direction + viewDir);
 	      specAngle = max(dot(halfDir, vNormal), 0.0);
-	      specOut = (light.specular.rgb * pow(specAngle, uSpecularExponent / 100.0 * 32.0)) * light.specular.a * light.specularIntensity;
-				specularColor += shading * specOut * uSpecularColor.rgb * uSpecularColor.a * uSpecularity;
+				specularity = pow(specAngle, uSpecularExponent / 100.0 * 32.0) * light.specular.a * light.specularIntensity * uSpecularity;
+	      // specOut = (light.specular.rgb * pow(specAngle, uSpecularExponent / 100.0 * 32.0)) * light.specular.a * light.specularIntensity * uSpecularity;
+				specularColor += shading * light.specular.rgb * specularity * uSpecularColor.rgb * uSpecularColor.a;
+
+				totalSpecularity += specularity;
 			}
 		}
 	#endif
@@ -227,13 +232,16 @@ void main () {
 			if (diffuseValue > 0.0) {
 	      halfDir = normalize(direction + viewDir);
 	      specAngle = max(dot(halfDir, vNormal), 0.0);
-	      specOut = (light.specular.rgb * pow(specAngle, uSpecularExponent / 100.0 * 32.0)) * light.specular.a * light.specularIntensity;
-				specularColor += attenuation * shading * specOut * uSpecularColor.rgb * uSpecularColor.a * uSpecularity;
+				specularity = pow(specAngle, uSpecularExponent / 100.0 * 32.0) * light.specular.a * light.specularIntensity * uSpecularity;
+	      // specOut = (light.specular.rgb * pow(specAngle, uSpecularExponent / 100.0 * 32.0)) * light.specular.a * light.specularIntensity * uSpecularity;
+				specularColor += shading * light.specular.rgb * specularity * uSpecularColor.rgb * uSpecularColor.a;
+
+				totalSpecularity += specularity;
 			}
 
 			// diffuseColor = vec3(shading);
 		}
 	#endif
 
-	gl_FragColor = vec4(ambientColor + diffuseColor + specularColor, uColor.a);
+	gl_FragColor = vec4(ambientColor + diffuseColor + specularColor, max(uColor.a, totalSpecularity));
 }
