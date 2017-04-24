@@ -458,7 +458,7 @@ class Renderer3d extends Renderer {
 		this.gl.blendFunc(this.gl.ONE, this.gl.ZERO);
 		this._objects.forEach((obj) => this.forwardRenderObject(obj, this._lights.needsUpdate, false));
 		// for each transparent object, forward render it
-		this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.DST_ALPHA);
+		this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
 		this._objects.forEach((obj) => this.forwardRenderObject(obj, this._lights.needsUpdate, true));
 
 		// debug visual aids
