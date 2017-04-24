@@ -205,6 +205,32 @@ class Renderer3d extends Renderer {
 
 		this._bindCommonLightAttributes(program, light, uniformName, lightIndex);
 	}
+	_bindDirectionalLight (program, lightIndex, textureIndex) {
+		let light = this._lights.directional[lightIndex];
+		let uniformName = "uDirectionalLights";
+		let props = this._instancedProperties.get(light);
+		this.gl.uniform1i(
+			program.getArrayPosition('uDirectionalShadows', lightIndex),
+			textureIndex);
+		this.gl.uniform1i(
+			program.getStructPosition(uniformName, lightIndex, 'shadowMapSize'),
+			props.shadowMap.size);
+		this.gl.activeTexture(this.gl['TEXTURE' + textureIndex]);
+		props.shadowMap.glTexture.bind();
+
+		this.gl.uniform3fv(
+			program.getStructPosition(uniformName, lightIndex, 'direction'),
+			light.direction.asFloat32());
+		this.gl.activeTexture(this.gl['TEXTURE' + textureIndex]);
+		props.shadowMap.glTexture.bind();
+		if (light.shadowCamera)
+			this.gl.uniformMatrix4fv(
+				program.getStructPosition(uniformName, lightIndex, 'projectionMatrix'),
+				false,
+				light.shadowCamera.projectionMatrix.asFloat32());
+
+		this._bindCommonLightAttributes(program, light, uniformName, lightIndex);
+	}
 
 	forwardRenderObject (obj, forceNewProgram) {
 		let objMaterial = obj.material;
@@ -268,6 +294,13 @@ class Renderer3d extends Renderer {
 			if (this._lights.point) {
 				for (let i = 0, len = this._lights.point.length; i < len && i < maxLights; i++) {
 					this._bindPointLight(program, i, textureIndex);
+					usedTextures++;
+					textureIndex++;
+				}
+			}
+			if (this._lights.directional) {
+				for (let i = 0, len = this._lights.directional.length; i < len && i < maxLights; i++) {
+					this._bindDirectionalLight(program, i, textureIndex);
 					usedTextures++;
 					textureIndex++;
 				}

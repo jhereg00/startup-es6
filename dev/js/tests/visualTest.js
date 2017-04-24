@@ -205,7 +205,8 @@ module.exports = function () {
 					depth: 10,
 					material: 'floor'
 				})
-			]
+			],
+			castsShadows: false
 		}).setRotationFromEuler(new Euler(0, 0, -Math.PI / 2)).moveTo(-3, 5, 0),
 		new Object3d({
 			meshes: [
@@ -214,7 +215,8 @@ module.exports = function () {
 					depth: 10,
 					material: 'floor'
 				})
-			]
+			],
+			castsShadows: false
 		}).setRotationFromEuler(new Euler(0, 0, Math.PI / 2)).moveTo(3, 5, 0),
 		new Object3d({
 			meshes: [
@@ -223,7 +225,8 @@ module.exports = function () {
 					depth: 10,
 					material: 'floor'
 				})
-			]
+			],
+			castsShadows: false
 		}).setRotationFromEuler(new Euler(Math.PI / 2, 0, 0)).moveTo(0, 5, -3)
 	];
 	walls.forEach((wall) => {
@@ -239,7 +242,7 @@ module.exports = function () {
 		shadowDistance: 20,
 		bias: .1,
 		minShadowBlur: 0.5,
-		maxShadowBlur: 0.5,
+		maxShadowBlur: 10,
 		shadowResolution: 2048
 	});
 	// sunLight.shadowCamera.width = 8;

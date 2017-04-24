@@ -8,6 +8,27 @@ varying vec3 vNormal;
 	const int SHADOW_BLUR_SAMPLES = 2;
 #endif
 
+#if NUM_DIRECTIONAL_LIGHTS > 0
+	uniform struct DirectionalLight {
+	  vec3 position;
+		vec3 direction;
+		mat4 projectionMatrix;
+
+	  vec4 ambient;
+	  float ambientIntensity;
+	  vec4 diffuse;
+	  float diffuseIntensity;
+	  vec4 specular;
+	  float specularIntensity;
+
+		int shadowMapSize;
+		float minShadowBlur;
+		float maxShadowBlur;
+		float shadowDistance;
+	} uDirectionalLights [NUM_DIRECTIONAL_LIGHTS];
+	uniform sampler2D uDirectionalShadows [NUM_DIRECTIONAL_LIGHTS];
+#endif
+
 #if NUM_POINT_LIGHTS > 0
 	uniform struct PointLight {
 	  vec3 position;
@@ -22,7 +43,6 @@ varying vec3 vNormal;
 	  vec4 specular;
 	  float specularIntensity;
 
-		int shadowMap;
 		int shadowMapSize;
 		float minShadowBlur;
 		float maxShadowBlur;
@@ -88,6 +108,43 @@ float varianceShadowFromCube (samplerCube shadowCube, float testDepth, vec3 angl
 	return chebyshev(testDepth, moments);
 }
 
+float varianceShadowFrom2d (sampler2D shadowMap, float testDepth, vec2 sampleLocation, int textureResolution, float minBlur, float maxBlur, float shadowDistance) {
+	// start by getting our moments
+	vec2 moments = vec2(0.0);
+	float occluderDist = texture2D(shadowMap, sampleLocation).r;
+	if (occluderDist == 0.0) {
+		occluderDist = shadowDistance;
+	}
+	float texelSize = (testDepth) / shadowDistance * maxBlur;
+	texelSize = max(minBlur, texelSize);
+
+	// return texelSize / maxBlur;
+
+	vec2 pixelSize = vec2(1.0 / float(textureResolution));
+	float xMultiple = texelSize * pixelSize.x;
+	float yMultiple = texelSize * pixelSize.y;
+
+	// moments will be an average using a basic box blur
+	for (int y = -SHADOW_BLUR_SAMPLES; y <= SHADOW_BLUR_SAMPLES; ++y) {
+		for (int x = -SHADOW_BLUR_SAMPLES; x <= SHADOW_BLUR_SAMPLES; ++x) {
+			// determine where to sample from for now based on blur size
+			vec2 offset = sampleLocation + vec2(float(x) * texelSize * pixelSize.x, float(y) * texelSize * pixelSize.y);
+			vec4 texSample = texture2D(shadowMap, offset);
+			moments.x += texSample.x == 0.0 ? shadowDistance : texSample.x;
+			moments.y += texSample.y == 0.0 ? shadowDistance * shadowDistance : texSample.y;
+		}
+	}
+	moments.x /= pow(float(SHADOW_BLUR_SAMPLES) * 2.0 + 1.0, 2.0);
+	moments.y /= pow(float(SHADOW_BLUR_SAMPLES) * 2.0 + 1.0, 2.0);
+
+	return chebyshev(testDepth, moments);
+}
+
+// actual diffuse and specular shading
+void diffuseAndSpecular (inout vec3 diffuseColor, inout vec3 specularColor, in float attenuation, in float shading, in vec3 direction, in vec3 viewDir) {
+
+}
+
 
 void main () {
 	// setup
@@ -106,10 +163,40 @@ void main () {
 	vec3 specOut;
 	vec3 direction;
 
+	#if NUM_DIRECTIONAL_LIGHTS > 0
+		for (int i = 0; i < NUM_DIRECTIONAL_LIGHTS; i++) {
+			DirectionalLight light = uDirectionalLights[i];
+			direction = light.direction * -1.0;
+			ambientColor += uColor.rgb * (light.ambient.rgb * light.ambient.a * light.ambientIntensity);
+
+			// see if we're in shadow
+			dist = distance(vPos.xyz, light.position);
+			shading = varianceShadowFrom2d(
+				uDirectionalShadows[i], //sampler2D shadowMap,
+				dist, //float testDepth,
+				((light.projectionMatrix * vPos).xy + 1.0) / 2.0, //vec2 sampleLocation,
+				light.shadowMapSize, //int textureResolution,
+				light.minShadowBlur, //float minBlur,
+				light.maxShadowBlur, //float maxBlur,
+				light.shadowDistance); //float shadowDistance
+
+			diffuseValue = clamp(dot(direction, vNormal), 0.0, 1.0);
+			diffuseColor += shading * diffuseValue * uColor.rgb * (light.diffuse.rgb * light.diffuse.a * light.diffuseIntensity);
+
+			// do blinn-phong specular highlights
+			if (diffuseValue > 0.0) {
+	      halfDir = normalize(direction + viewDir);
+	      specAngle = max(dot(halfDir, vNormal), 0.0);
+	      specOut = (light.specular.rgb * pow(specAngle, uSpecularExponent / 100.0 * 32.0)) * light.specular.a * light.specularIntensity;
+				specularColor += shading * specOut * uSpecularColor.rgb * uSpecularColor.a * uSpecularity;
+			}
+		}
+	#endif
+
 	#if NUM_POINT_LIGHTS > 0
 		for (int i = 0; i < NUM_POINT_LIGHTS; i++) {
 			PointLight light = uPointLights[i];
-			// ambientColor += uColor.rgb * (light.ambient.rgb * light.ambient.a * light.ambientIntensity);
+			ambientColor += uColor.rgb * (light.ambient.rgb * light.ambient.a * light.ambientIntensity);
 
 			direction = normalize(light.position - vPos.xyz);
 			// see if we're in shadow
