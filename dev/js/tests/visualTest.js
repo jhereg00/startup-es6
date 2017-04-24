@@ -197,41 +197,57 @@ module.exports = function () {
 
 	scene1.addElement(magicBox);
 
-	let walls = [
-		new Object3d({
-			meshes: [
-				new Plane({
-					width: 10,
-					depth: 10,
-					material: 'floor'
-				})
-			],
-			castsShadows: false
-		}).setRotationFromEuler(new Euler(0, 0, -Math.PI / 2)).moveTo(-3, 5, 0),
-		new Object3d({
-			meshes: [
-				new Plane({
-					width: 10,
-					depth: 10,
-					material: 'floor'
-				})
-			],
-			castsShadows: false
-		}).setRotationFromEuler(new Euler(0, 0, Math.PI / 2)).moveTo(3, 5, 0),
-		new Object3d({
-			meshes: [
-				new Plane({
-					width: 10,
-					depth: 10,
-					material: 'floor'
-				})
-			],
-			castsShadows: false
-		}).setRotationFromEuler(new Euler(Math.PI / 2, 0, 0)).moveTo(0, 5, -3)
-	];
-	walls.forEach((wall) => {
-		scene1.addElement(wall);
-	});
+	// let walls = [
+	// 	new Object3d({
+	// 		meshes: [
+	// 			new Plane({
+	// 				width: 10,
+	// 				depth: 10,
+	// 				material: 'floor'
+	// 			})
+	// 		],
+	// 		castsShadows: false
+	// 	}).setRotationFromEuler(new Euler(0, 0, -Math.PI / 2)).moveTo(-3, 5, 0),
+	// 	new Object3d({
+	// 		meshes: [
+	// 			new Plane({
+	// 				width: 10,
+	// 				depth: 10,
+	// 				material: 'floor'
+	// 			})
+	// 		],
+	// 		castsShadows: false
+	// 	}).setRotationFromEuler(new Euler(0, 0, Math.PI / 2)).moveTo(3, 5, 0),
+	// 	new Object3d({
+	// 		meshes: [
+	// 			new Plane({
+	// 				width: 10,
+	// 				depth: 10,
+	// 				material: 'floor'
+	// 			})
+	// 		],
+	// 		castsShadows: false
+	// 	}).setRotationFromEuler(new Euler(Math.PI / 2, 0, 0)).moveTo(0, 5, -3)
+	// ];
+	// walls.forEach((wall) => {
+	// 	scene1.addElement(wall);
+	// });
+	let walls = new Object3d({
+		meshes: [
+			new Box({
+				width: 4,
+				height: 4,
+				depth: 4,
+				material: new Material({
+					color: [.8, 0, 0, .5],
+					specularity: 1
+				}),
+				invertNormals: true
+			})
+		],
+		castsShadows: false
+	}).moveTo(0, 3, 0);
+	scene1.addElement(walls);
 
 
 	let sunLight = new DirectionalLight({

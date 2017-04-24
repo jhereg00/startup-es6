@@ -119,6 +119,16 @@ class Box extends Mesh {
 			20, 22, 23
 		);
 
+		if (options.invertNormals) {
+			// invert both normals and face drawing order (so cull faces works correctly)
+			normals = normals.map((x) => x *= -1);
+			let newElements = [];
+			for (let i = elements.length - 1; i > -1; i--) {
+				newElements.push(elements[i]);
+			}
+			elements = newElements;
+		}
+
 		super({
 			name: options.name || null,
 			positions: positions,

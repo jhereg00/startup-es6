@@ -232,11 +232,14 @@ class Renderer3d extends Renderer {
 		this._bindCommonLightAttributes(program, light, uniformName, lightIndex);
 	}
 
-	forwardRenderObject (obj, forceNewProgram) {
+	forwardRenderObject (obj, forceNewProgram, drawTransparent) {
 		let objMaterial = obj.material;
 		obj.meshes.forEach((mesh) => {
 			let meshProps = this._instancedProperties.get(mesh);
 			let material = objMaterial || mesh.getMaterial();
+			if ((material.color[3] === 1) === drawTransparent) {
+				return;
+			}
 			let materialProps = this._instancedProperties.get(material);
 			let program = materialProps.program;
 			let usedTextures = 0;
@@ -305,7 +308,6 @@ class Renderer3d extends Renderer {
 					textureIndex++;
 				}
 			}
-			this.gl.blendFunc(this.gl.ONE, this.gl.ZERO);
 			//
 			// // bind as many lights as we can, then do a pass.  Keep going if needed
 			// let inc = this._maxTextures - usedTextures;
@@ -453,8 +455,11 @@ class Renderer3d extends Renderer {
 		this.resetViewport();
 		this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
 		this.clear();
-		this._objects.forEach((obj) => this.forwardRenderObject(obj, this._lights.needsUpdate));
+		this.gl.blendFunc(this.gl.ONE, this.gl.ZERO);
+		this._objects.forEach((obj) => this.forwardRenderObject(obj, this._lights.needsUpdate, false));
 		// for each transparent object, forward render it
+		this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.DST_ALPHA);
+		this._objects.forEach((obj) => this.forwardRenderObject(obj, this._lights.needsUpdate, true));
 
 		// debug visual aids
 		if (this._drawWorldSpaceEnabled) {
